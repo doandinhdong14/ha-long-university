@@ -63,10 +63,10 @@ export async function duyetDangKyUi(page: Page, nguoiDuyet: string, nguoiLam: st
   await expect(page.getByText("Đã duyệt danh sách. Các task bắt buộc đã được giao.")).toBeVisible();
 }
 
-/** Người làm KPI nộp minh chứng cho một task (qua trang Cuối kỳ). */
+/** Người làm KPI nộp minh chứng cho một task (qua trang Trong kỳ). */
 export async function nopUi(page: Page, username: string, task: string, tenFile = "minh-chung.pdf") {
   await dangNhap(page, username);
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await page.locator(`[data-task="${task}"]`).getByRole("link").click();
   await page.getByLabel("File minh chứng").setInputFiles({
     name: tenFile,

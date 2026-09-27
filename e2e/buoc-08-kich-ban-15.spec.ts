@@ -68,7 +68,7 @@ test.beforeAll(async () => {
 
 test("trước khi chốt: người làm KPI chưa thấy khối Kết quả (chỉ thấy kết quả cuối cùng)", async ({ page }) => {
   await dangNhap(page, "gv.nguyenvanan");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.getByTestId("phan-tram")).toHaveText("50%");
   await expect(page.getByTestId("ket-qua")).toHaveCount(0);
 });
@@ -96,7 +96,7 @@ const MONG_DOI: [string, string][] = [
 for (const [username, ketQua] of MONG_DOI) {
   test(`${username}: ${ketQua}`, async ({ page }) => {
     await dangNhap(page, username);
-    await page.goto("/cuoi-ky");
+    await page.goto("/trong-ky");
     await expect(page.getByTestId("ket-qua-tieu-de")).toHaveText(ketQua);
     if (username === "gv.nguyenvanan") {
       await expect(page.getByTestId("task-thieu").locator("li")).toHaveCount(11);
@@ -115,7 +115,7 @@ test("màn hình Duyệt sau chốt kỳ có cột Kết quả; mọi thao tác 
   await expect(page.locator('tr[data-nguoi="gv.nguyenvanan"] [data-cot="ket-qua"]')).toHaveText("Không đạt – A1");
 
   await dangNhap(page, "gv.nguyenvanan");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await page.locator("[data-task]").filter({ hasText: "Chưa làm" }).first().getByRole("link").click();
   await expect(page.getByText("Kỳ đã chốt, không thể thao tác.")).toBeVisible();
 });

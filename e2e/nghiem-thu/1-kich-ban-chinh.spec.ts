@@ -85,7 +85,7 @@ test("gv.levancuong: 100% bắt buộc + xin thêm 3 task mở rộng; 2 đượ
 
   // Xin thêm 3 task mở rộng của nhiệm vụ 1–3.
   await dangNhap(page, "gv.levancuong");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   for (const ten of ["Số hóa bài giảng lên hệ thống LMS", "Nhóm sinh viên đạt giải cấp trường", "Bài báo thuộc danh mục Scopus/ISI"]) {
     await page.locator(`[data-xin-them="${ten}"]`).getByRole("button", { name: "Xin làm" }).click();
     await expect(page.locator(`[data-xin-them="${ten}"]`)).toContainText("Đang chờ duyệt");
@@ -144,17 +144,17 @@ test("trước khi chốt kỳ: % chỉ đếm task đã chốt; chưa hiện kh
   ];
   for (const [u, pt] of mong) {
     await dangNhap(page, u);
-    await page.goto("/cuoi-ky");
+    await page.goto("/trong-ky");
     await expect(page.getByTestId("phan-tram"), u).toHaveText(pt);
     await expect(page.getByTestId("ket-qua")).toHaveCount(0);
   }
   await dangNhap(page, "gv.levancuong");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.getByTestId("task-vuot")).toHaveText("+2 task vượt");
   // Dòng "Đang treo" = soTreo mục 10.3 (bắt buộc + mở rộng): task mở rộng thứ 3 mới chỉ được duyệt.
   await expect(page.getByTestId("dang-treo")).toContainText("Đang treo: 1 task");
   await dangNhap(page, "gv.ngovantreo");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.getByTestId("dang-treo")).toContainText("Đang treo: 2 task");
 });
 
@@ -174,7 +174,7 @@ const KET_QUA: [string, string][] = [
 for (const [u, kq] of KET_QUA) {
   test(`kết quả ${u}: ${kq}`, async ({ page }) => {
     await dangNhap(page, u);
-    await page.goto("/cuoi-ky");
+    await page.goto("/trong-ky");
     await expect(page.getByTestId("ket-qua-tieu-de")).toHaveText(kq);
     if (u === "gv.nguyenvanan") {
       const thieu = page.getByTestId("task-thieu").locator("li");
@@ -192,7 +192,7 @@ for (const [u, kq] of KET_QUA) {
 
 test("case phụ: treo đến hết kỳ → Không đạt, lý do treo / trả về", async ({ page }) => {
   await dangNhap(page, "gv.ngovantreo");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.getByTestId("ket-qua-tieu-de")).toHaveText("Không đạt – F");
   await expect(page.getByTestId("task-thieu").locator("[data-ly-do]")).toHaveText([
     "(Đã duyệt nhưng chưa gửi lên / chưa được chốt)",
@@ -203,14 +203,14 @@ test("case phụ: treo đến hết kỳ → Không đạt, lý do treo / trả 
 
 test("case phụ: không đăng ký → Không đạt – F, ghi chú \"Chưa có danh sách nhiệm vụ được duyệt\"", async ({ page }) => {
   await dangNhap(page, "gv.dovanvang");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.getByTestId("ket-qua-tieu-de")).toHaveText("Không đạt – F");
   await expect(page.getByTestId("ket-qua-ghi-chu")).toHaveText("Chưa có danh sách nhiệm vụ được duyệt");
 });
 
 test("case phụ: task mở rộng đã duyệt nhưng chưa chốt → không tính là vượt", async ({ page }) => {
   await dangNhap(page, "gv.levancuong");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.getByTestId("task-vuot-list")).not.toContainText("Bài báo thuộc danh mục Scopus/ISI");
   await expect(page.locator('[data-task="Bài báo thuộc danh mục Scopus/ISI"]')).toContainText("Trưởng bộ môn đã duyệt – chờ trưởng khoa chốt");
 });

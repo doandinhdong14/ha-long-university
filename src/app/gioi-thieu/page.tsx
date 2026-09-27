@@ -243,7 +243,7 @@ function Hero() {
   );
 }
 
-/** Thẻ minh họa màn hình "Cuối kỳ" của giáo viên (chỉ là hình vẽ, dữ liệu mẫu). */
+/** Thẻ minh họa màn hình "Trong kỳ" của giáo viên (chỉ là hình vẽ, dữ liệu mẫu). */
 function BangMinhHoa() {
   const phanTram = 75;
   return (
@@ -251,7 +251,7 @@ function BangMinhHoa() {
       <div className="rounded-2xl bg-white p-5 shadow-[0_20px_60px_-15px_rgba(24,119,242,0.35)] ring-1 ring-slate-200 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-semibold tracking-wide text-[#65676B] uppercase">Cuối kỳ</p>
+            <p className="text-xs font-semibold tracking-wide text-[#65676B] uppercase">Trong kỳ</p>
             <p className="mt-0.5 font-semibold text-[#0A1F44]">Kỳ 1 · 2026–2027</p>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-amber-700 ring-1 ring-amber-200">

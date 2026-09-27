@@ -60,7 +60,7 @@ export async function guiNhacViec(now: Date = new Date()) {
     kq.deadline += await guiTheoDem(
       demThieu,
       (n) => `${hanChot}. Bạn còn ${n} task bắt buộc chưa được chốt.`,
-      LINK.cuoiKy(ky.id),
+      LINK.trongKy(ky.id),
       `nhac-deadline:${ky.id}`,
     );
 

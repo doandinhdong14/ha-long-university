@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarRange,
+  CircleCheckBig,
   ClipboardList,
   FileCheck2,
   FileSpreadsheet,
@@ -23,7 +24,8 @@ import type { MucMenu } from "@/lib/menu";
 // Biểu tượng chỉ để trang trí, theo đường dẫn của mục menu.
 const ICON: Record<string, LucideIcon> = {
   "/dau-ky": ClipboardList,
-  "/cuoi-ky": ListChecks,
+  "/trong-ky": ListChecks,
+  "/cuoi-ky": CircleCheckBig,
   "/duyet": FileCheck2,
   "/chot": Stamp,
   "/bao-cao": FileSpreadsheet,

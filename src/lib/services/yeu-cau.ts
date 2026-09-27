@@ -73,7 +73,7 @@ export async function duyetYeuCau(m: NguoiDung, input: { yeuCauId: string; nhanX
     if (!count) throw new LoiNghiepVu("Yêu cầu không còn ở trạng thái Chờ duyệt.", 409);
     await tx.kpiTask.createMany({ data: [{ userId: yc.userId, kyId: yc.kyId, taskId: yc.taskId }], skipDuplicates: true });
     await guiThongBao(tx, [yc.userId], `Yêu cầu làm thêm task "${yc.task.ten}" đã được duyệt.`, {
-      link: LINK.cuoiKy(yc.kyId),
+      link: LINK.trongKy(yc.kyId),
       tru: m.id,
     });
   });
@@ -90,7 +90,7 @@ export async function tuChoiYeuCau(m: NguoiDung, input: { yeuCauId: string; nhan
     });
     if (!count) throw new LoiNghiepVu("Yêu cầu không còn ở trạng thái Chờ duyệt.", 409);
     await guiThongBao(tx, [yc.userId], `Yêu cầu làm thêm task "${yc.task.ten}" bị từ chối. Nhận xét: ${input.nhanXet}`, {
-      link: LINK.cuoiKy(yc.kyId),
+      link: LINK.trongKy(yc.kyId),
       tru: m.id,
     });
   });

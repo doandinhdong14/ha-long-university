@@ -26,8 +26,9 @@ export async function guiThongBao(
 /** Đường dẫn trong thông báo (chuông bấm vào đi tới trang liên quan). */
 export const LINK = {
   dauKy: (kyId: string) => `/dau-ky?kyId=${kyId}`,
+  trongKy: (kyId: string) => `/trong-ky?kyId=${kyId}`,
   cuoiKy: (kyId: string) => `/cuoi-ky?kyId=${kyId}`,
-  taskCuaToi: (kpiTaskId: string) => `/cuoi-ky/task/${kpiTaskId}`,
+  taskCuaToi: (kpiTaskId: string) => `/trong-ky/task/${kpiTaskId}`,
   duyetNguoi: (userId: string, kyId: string, tab: "dang-ky" | "task" | "xin-them") =>
     `/duyet/${userId}?kyId=${kyId}&tab=${tab}`,
   duyetTask: (userId: string, kyId: string, kpiTaskId: string) =>

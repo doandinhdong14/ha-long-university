@@ -364,3 +364,21 @@ Lần deploy đầu, bước pre-deploy tạo bảng và seed dữ liệu demo: 
 - **Vấn đề:** đồng bộ giao diện cả hệ thống với trang `/gioi-thieu` (logo trường, tông xanh `#1877F2`, không dùng xanh lá).
 - **Quyết định:** chỉ đổi phần trình bày. Cụ thể: token màu trong `globals.css` (thêm màu `navy` cho tiêu đề); header có logo và ảnh đại diện chữ tắt; sidebar có biểu tượng theo đường dẫn (bề rộng giữ `w-60` vì thanh tổng kết Đầu kỳ dùng `md:left-60`); trang đăng nhập chia 2 cột; card, bảng, nút. Các màu trạng thái trước đây là xanh lá: "Đã chốt" và "Đạt" chuyển sang xanh blue, "Vượt chỉ tiêu" chuyển sang vàng. Không sửa server action, route, service, luật hay dữ liệu; giữ nguyên chữ, label và cấu trúc `aside nav a` / `header` mà E2E dùng.
 - **Lý do:** yêu cầu "chỉ đổi giao diện, không động vào backend, cách hoạt động".
+
+## Tách "Cuối kỳ" thành "Trong kỳ" + "Cuối kỳ" (ngoài 12 bước, 27/09/2026)
+- **Vấn đề:** người dùng yêu cầu đổi mục "Cuối kỳ" (làm task, theo dõi tiến độ) thành "Trong kỳ", và thêm mục "Cuối kỳ" mới chỉ hiện những gì đã chốt – hoàn thành trong kỳ, giao diện đầy đủ như Trong kỳ. Lệch bảng 2.1 của đặc tả (mỗi người làm KPI thêm 1 mục menu: GV 4, TBM 6, TK 7, HP 7).
+- **Quyết định:**
+  - Trang cũ chuyển nguyên sang `/trong-ky` (cả `/trong-ky/task/[kpiTaskId]` và server action xin thêm task), không đổi cách hoạt động. Đường dẫn cũ `/cuoi-ky/task/:id` (trong thông báo đã lưu ở DB) chuyển hướng sang `/trong-ky/task/:id` bằng `redirects` trong `next.config.ts`.
+  - `/cuoi-ky` mới: chỉ để xem. Cùng tiêu đề, chọn kỳ, khối kết quả kỳ (khi kỳ đã chốt), thẻ tổng quan (biểu đồ tròn, xếp loại đăng ký, task vượt) như Trong kỳ; danh sách nhiệm vụ – task chỉ gồm task `DA_CHOT` (ẩn nhiệm vụ chưa có task nào được chốt). Không có nút nộp, xin thêm task, đếm ngược. Link "Chi tiết" mở trang chi tiết task của Trong kỳ với `?tu=cuoi-ky` để nút quay lại về Cuối kỳ.
+  - Giao diện chung của hai trang ở `src/components/kpi/kpi-cua-toi.tsx`, dữ liệu chung ở `src/lib/services/kpi-cua-toi.ts`; % và biểu đồ vẫn chỉ qua `tinhKetQua`.
+  - Thông báo: duyệt đăng ký, duyệt/từ chối xin thêm task, nhắc deadline → Trong kỳ; kỳ đã chốt (kết quả) → Cuối kỳ.
+- **Lý do:** giữ một bộ route + component + service cho mọi cấp; không đổi luật, trạng thái hay dữ liệu.
+
+## Nút "Reset dữ liệu" của Admin (ngoài 12 bước, 27/09/2026)
+- **Vấn đề:** người dùng cần một nút đỏ trong tài khoản admin để xóa hết dữ liệu (minh chứng, tài liệu) mà không mất tài khoản. Đặc tả không có chức năng này (admin vốn chỉ xem bài nộp).
+- **Quyết định (người dùng chọn "Giữ kỳ & phân việc"):**
+  - Nút đỏ "Reset dữ liệu" ở đầu trang Phân việc đầu kỳ, cạnh "Tạo kỳ"; bấm phải xác nhận thêm một lần ở hộp thoại.
+  - Xóa: đăng ký nhiệm vụ, task KPI (kèm bài nộp, file minh chứng, lịch sử), yêu cầu thêm task, kết quả kỳ, quy định/tài liệu đã ban hành (kèm file, danh sách đã xem), thông báo; file trên ổ đĩa xóa sau khi transaction commit. Kỳ đã chốt được mở lại (`daChot = false`).
+  - Giữ: tài khoản, mật khẩu, khoa/bộ môn, hiệu phó phụ trách, kỳ (kể cả trạng thái công bố), nhiệm vụ, task, bảng xếp loại.
+  - Server action `resetDuLieuHeThong` (`admin/phan-viec/actions.ts`) kiểm tra vai trò ADMIN ở server; logic ở `src/lib/services/reset-du-lieu.ts`; test `tests/reset.int.test.ts`.
+- **Lý do:** làm lại demo ngay trên giao diện, không cần `npm run db:reset` từ máy; phân việc của admin không phải nhập lại.

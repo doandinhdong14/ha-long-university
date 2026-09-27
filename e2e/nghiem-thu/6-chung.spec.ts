@@ -103,6 +103,8 @@ test("sửa minh chứng khi Chờ duyệt → được; khi đã duyệt/chốt
   const [t1] = await taskCua("gv.levancuong", "BAT_BUOC");
   await dangNhap(page, "gv.levancuong");
   await nop(page, t1.id);
+  // Chờ trang làm mới xong, form chuyển sang chế độ sửa (form mới dựng lại sẽ xóa chữ đã gõ vào form cũ).
+  await expect(page.getByRole("button", { name: "Lưu thay đổi" })).toBeVisible();
   await page.getByLabel("Ghi chú (không bắt buộc)").fill("Đã bổ sung bản scan");
   await page.getByLabel("Thêm file").setInputFiles({ name: "bo-sung.png", mimeType: "image/png", buffer: Buffer.from("png") });
   await page.getByRole("button", { name: "Lưu thay đổi" }).click();
@@ -117,7 +119,7 @@ test("sửa minh chứng khi Chờ duyệt → được; khi đã duyệt/chốt
   await moTaskDuyet(page, await idNguoi("gv.levancuong"), kyId, t1.id);
   await bamNut(page, "Duyệt");
   await dangNhap(page, "gv.levancuong");
-  await page.goto(`/cuoi-ky/task/${t1.id}`);
+  await page.goto(`/trong-ky/task/${t1.id}`);
   await expect(page.getByTestId("da-khoa")).toContainText("Không sửa được minh chứng");
   await expect(page.getByRole("button", { name: "Lưu thay đổi" })).toHaveCount(0);
   let r = await sua();
@@ -166,7 +168,7 @@ test("admin không sửa được minh chứng của ai", async ({ page }) => {
 test("file > 20MB hoặc sai định dạng → báo lỗi (giao diện và server)", async ({ page }) => {
   const t3 = (await taskCua("gv.levancuong", "BAT_BUOC"))[2];
   await dangNhap(page, "gv.levancuong");
-  await page.goto(`/cuoi-ky/task/${t3.id}`);
+  await page.goto(`/trong-ky/task/${t3.id}`);
 
   await page.getByLabel("File minh chứng").setInputFiles(FILE("virus.exe"));
   await expect(page.locator('[data-file-moi="virus.exe"]')).toContainText("sai định dạng");
@@ -220,7 +222,7 @@ test("không đăng ký → chốt kỳ ra Không đạt – F, ghi chú \"Chưa
   // An chỉ tick (Nháp, chưa gửi); TBM không đăng ký gì.
   for (const u of ["gv.nguyenvanan", "tbm.phamthibich"]) {
     await dangNhap(page, u);
-    await page.goto("/cuoi-ky");
+    await page.goto("/trong-ky");
     await expect(page.getByTestId("ket-qua-tieu-de"), u).toHaveText("Không đạt – F");
     await expect(page.getByTestId("ket-qua-ghi-chu"), u).toHaveText("Chưa có danh sách nhiệm vụ được duyệt");
   }

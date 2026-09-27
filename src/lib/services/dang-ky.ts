@@ -136,7 +136,7 @@ export async function duyetDangKy(m: NguoiDung, input: { dangKyId: string; nhanX
       tx,
       [dk.userId],
       `Danh sách đăng ký nhiệm vụ ${dk.ky.ten} đã được duyệt (${tongDiem} điểm, xếp loại ${xepLoai}).`,
-      { link: LINK.cuoiKy(dk.kyId), tru: m.id },
+      { link: LINK.trongKy(dk.kyId), tru: m.id },
     );
     return { soTask: taskIds.length };
   });

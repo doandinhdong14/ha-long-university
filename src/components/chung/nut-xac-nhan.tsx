@@ -25,6 +25,7 @@ export function NutXacNhan({
   variant = "outline",
   size = "default",
   title,
+  className,
 }: {
   children: React.ReactNode;
   tieuDe: string;
@@ -36,11 +37,12 @@ export function NutXacNhan({
   variant?: React.ComponentProps<typeof Button>["variant"];
   size?: React.ComponentProps<typeof Button>["size"];
   title?: string;
+  className?: string;
 }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant={variant} size={size} disabled={disabled} title={title}>
+        <Button variant={variant} size={size} disabled={disabled} title={title} className={className}>
           {children}
         </Button>
       </AlertDialogTrigger>

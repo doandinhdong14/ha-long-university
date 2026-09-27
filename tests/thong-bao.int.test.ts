@@ -1,6 +1,6 @@
 // Thông báo trong web (mục 11): đúng người nhận cho từng sự kiện; chuông chỉ thấy thông báo của mình.
 import { beforeAll, describe, expect, it } from "vitest";
-import { xinThemTask } from "@/app/(app)/cuoi-ky/actions";
+import { xinThemTask } from "@/app/(app)/trong-ky/actions";
 import { chonNhiemVu, guiDangKy } from "@/app/(app)/dau-ky/actions";
 import { duyetDangKy, duyetYeuCau } from "@/app/(app)/duyet/actions";
 import { GET as apiThongBao } from "@/app/api/thong-bao/route";

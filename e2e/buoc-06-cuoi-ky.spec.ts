@@ -7,9 +7,9 @@ test.beforeAll(async () => resetDb());
 const T1 = "Biên soạn đề cương chi tiết học phần";
 const T2 = "Soạn slide bài giảng";
 
-test("chưa được duyệt danh sách → Cuối kỳ báo chưa duyệt", async ({ page }) => {
+test("chưa được duyệt danh sách → Trong kỳ báo chưa duyệt", async ({ page }) => {
   await dangNhap(page, "gv.nguyenvanan");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.getByTestId("chua-duyet")).toContainText("Danh sách nhiệm vụ chưa được duyệt");
 });
 
@@ -18,7 +18,7 @@ test("GV nộp → TBM duyệt: GV thấy treo, % không tăng; TBM hủy duyệ
   await duyetDangKyUi(page, "tbm.phamthibich", "gv.nguyenvanan");
 
   await nopUi(page, "gv.nguyenvanan", T1);
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.locator(`[data-task="${T1}"]`)).toContainText("Chờ duyệt");
   await expect(page.locator('[data-phan="choDuyet"]')).toContainText("1");
 
@@ -29,7 +29,7 @@ test("GV nộp → TBM duyệt: GV thấy treo, % không tăng; TBM hủy duyệ
   await expect(page.locator('[data-xem-truoc="minh-chung.pdf"]')).toBeVisible();
 
   await dangNhap(page, "gv.nguyenvanan");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.locator(`[data-task="${T1}"]`)).toContainText("Trưởng bộ môn đã duyệt – chờ trưởng khoa chốt");
   await expect(page.getByTestId("phan-tram")).toHaveText("0%");
   await expect(page.getByTestId("dang-treo")).toContainText("Đang treo: 1 task");
@@ -51,7 +51,7 @@ test("từ chối có nhận xét → GV thấy nhận xét, nộp lại", async
   await nopUi(page, "gv.nguyenvanan", T2);
   await thaoTacDuyetUi(page, "tbm.phamthibich", "gv.nguyenvanan", T2, "Từ chối", "Thiếu slide chương 3");
   await dangNhap(page, "gv.nguyenvanan");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.locator(`[data-task="${T2}"]`)).toContainText("Bị từ chối");
   await page.locator(`[data-task="${T2}"]`).getByRole("link", { name: "Nộp minh chứng" }).click();
   await expect(page.getByTestId("nhan-xet-duyet")).toContainText("Thiếu slide chương 3");
@@ -72,7 +72,7 @@ test("Hàng chờ: task Chờ duyệt / Đã duyệt / Bị trả về, cũ nh�
 
 test("xin thêm task mở rộng → TBM duyệt → task được giao", async ({ page }) => {
   await dangNhap(page, "gv.nguyenvanan");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await page.locator('[data-xin-them="Số hóa bài giảng lên hệ thống LMS"]').getByRole("button", { name: "Xin làm" }).click();
   await expect(page.locator('[data-xin-them="Số hóa bài giảng lên hệ thống LMS"]')).toContainText("Đang chờ duyệt");
 
@@ -86,7 +86,7 @@ test("xin thêm task mở rộng → TBM duyệt → task được giao", async 
   await expect(page.getByText("Đã duyệt. Task mở rộng đã được giao.")).toBeVisible();
 
   await dangNhap(page, "gv.nguyenvanan");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.locator('[data-task="Số hóa bài giảng lên hệ thống LMS"]')).toContainText("Chưa làm");
 });
 
@@ -98,14 +98,14 @@ test("HP nộp → HT Duyệt (vẫn treo) → HT Chốt → % tăng", async ({ 
   await thaoTacDuyetUi(page, "ht.nguyenvanhieu", "hp.tranthiphuong", "Ban hành kế hoạch đào tạo", "Duyệt");
   await expect(page.getByTestId("nut-thao-tac").getByRole("button")).toHaveText(["Hủy duyệt", "Chốt"]);
   await dangNhap(page, "hp.tranthiphuong");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.locator('[data-task="Ban hành kế hoạch đào tạo"]')).toContainText("Hiệu trưởng đã duyệt – chờ chốt");
   await expect(page.getByTestId("phan-tram")).toHaveText("0%");
 
   await thaoTacDuyetUi(page, "ht.nguyenvanhieu", "hp.tranthiphuong", "Ban hành kế hoạch đào tạo", "Chốt");
   await expect(page.getByTestId("chi-tiet-task")).toContainText("Đã chốt");
   await dangNhap(page, "hp.tranthiphuong");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.locator('[data-task="Ban hành kế hoạch đào tạo"]')).toContainText("Đã chốt – hoàn thành");
   await expect(page.getByTestId("phan-tram")).toHaveText("50%");
 });

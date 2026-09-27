@@ -38,7 +38,7 @@ async function trangMoi(browser: Browser, username: string): Promise<Page> {
 
 async function xemCuoiKy(page: Page, username: string) {
   await dangNhap(page, username);
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
 }
 
 test.beforeAll(async () => {
@@ -196,9 +196,9 @@ test("người chốt trả về → người duyệt thấy nhận xét; ngư�
   await expect(page.getByTestId("nut-thao-tac").getByRole("button")).toHaveText(["Trả giáo viên làm lại", "Duyệt lại"]);
 
   await dangNhap(page, "gv.tranthibinh");
-  await page.goto("/cuoi-ky");
+  await page.goto("/trong-ky");
   await expect(page.locator(`[data-task="${T[1].ten}"]`)).toContainText("Trưởng khoa trả về – chờ trưởng bộ môn xử lý");
-  await page.goto(`/cuoi-ky/task/${T[1].id}`);
+  await page.goto(`/trong-ky/task/${T[1].id}`);
   await expect(page.locator("main")).not.toContainText("Thiếu trang bìa có chữ ký");
 });
 
@@ -208,7 +208,7 @@ test("người duyệt trả làm lại → nộp lại → duyệt → gửi �
   await bamNut(page, "Trả giáo viên làm lại", "Bổ sung trang bìa rồi nộp lại");
 
   await dangNhap(page, "gv.tranthibinh");
-  await page.goto(`/cuoi-ky/task/${T[1].id}`);
+  await page.goto(`/trong-ky/task/${T[1].id}`);
   await expect(page.getByTestId("lich-su-nop")).toContainText("Bổ sung trang bìa rồi nộp lại");
   await nop(page, T[1].id);
   await expect(page.locator("[data-lan-nop]")).toHaveCount(2);
@@ -313,7 +313,7 @@ test("sau deadline: không ai nộp, duyệt, gửi, chốt, trả về được
   await dangNhap(page, "gv.tranthibinh");
   await nop(page, T[4].id); // T[4] Chờ duyệt để thử duyệt; T[5] Chưa làm để thử nộp
   const gv = await trangMoi(browser, "gv.tranthibinh");
-  await gv.goto(`/cuoi-ky/task/${T[5].id}`);
+  await gv.goto(`/trong-ky/task/${T[5].id}`);
   const tbmDuyet = await trangMoi(browser, "tbm.phamthibich");
   await moTaskDuyet(tbmDuyet, binhId, kyId, T[4].id);
   const tbmGui = await trangMoi(browser, "tbm.phamthibich");

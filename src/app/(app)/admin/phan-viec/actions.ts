@@ -15,6 +15,7 @@ import {
   taskDaCoNguoiLam,
 } from "@/lib/services/phan-viec";
 import { chotKy } from "@/lib/services/chot-ky";
+import { resetDuLieu } from "@/lib/services/reset-du-lieu";
 import { chuoiThanhNgay } from "@/lib/time";
 
 const Ngay = z
@@ -265,5 +266,15 @@ export async function chotKyNgay(kyId: string) {
     const r = await chotKy(kyId);
     if (!r) throw new LoiNghiepVu("Kỳ vừa được chốt bởi tiến trình khác.", 409);
     return r;
+  });
+}
+
+// ───────────────────────── Reset dữ liệu ─────────────────────────
+
+/** Nút đỏ "Reset dữ liệu": xóa minh chứng, tài liệu và mọi dữ liệu KPI; giữ tài khoản, kỳ, phân việc. */
+export async function resetDuLieuHeThong() {
+  return hanhDong(async () => {
+    await kiemTraVaiTro("ADMIN");
+    return resetDuLieu();
   });
 }

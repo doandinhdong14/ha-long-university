@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { moTaThoiGianKy, trangThaiKy } from "@/lib/ky";
 import { DOI_TUONGS } from "@/lib/roles";
 import { DialogTaoKy } from "./dialog-tao-ky";
+import { NutResetDuLieu } from "./nut-reset-du-lieu";
 
 export default async function TrangPhanViec() {
   await yeuCauVaiTro("ADMIN");
@@ -23,7 +24,10 @@ export default async function TrangPhanViec() {
         tieuDe="Phân việc đầu kỳ"
         moTa="Tạo kỳ, nhiệm vụ, task và bảng xếp loại cho 4 vị trí. Người làm KPI chỉ thấy kỳ đã công bố."
       >
-        <DialogTaoKy kys={kys.map((k) => ({ id: k.id, ten: k.ten }))} />
+        <div className="flex flex-wrap gap-2">
+          <NutResetDuLieu />
+          <DialogTaoKy kys={kys.map((k) => ({ id: k.id, ten: k.ten }))} />
+        </div>
       </TrangTieuDe>
       <div className="rounded-lg border bg-background">
         <Table>

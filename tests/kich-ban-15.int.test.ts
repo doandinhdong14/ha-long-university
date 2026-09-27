@@ -2,7 +2,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { chotKyNgay, congBoKy, taoKy } from "@/app/(app)/admin/phan-viec/actions";
 import { taoTaiKhoan } from "@/app/(app)/admin/tai-khoan/actions";
-import { xinThemTask } from "@/app/(app)/cuoi-ky/actions";
+import { xinThemTask } from "@/app/(app)/trong-ky/actions";
 import { guiDangKy } from "@/app/(app)/dau-ky/actions";
 import { duyetYeuCau } from "@/app/(app)/duyet/actions";
 import { POST as cronChotKy } from "@/app/api/cron/chot-ky/route";

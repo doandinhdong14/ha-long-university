@@ -19,9 +19,11 @@ import { layLichSuNop } from "@/lib/services/lich-su";
 import { deadline, hienNgayGio } from "@/lib/time";
 import { FormNopMinhChung } from "./form-nop";
 
-export default async function TrangTaskCuaToi(props: PageProps<"/cuoi-ky/task/[kpiTaskId]">) {
+export default async function TrangTaskCuaToi(props: PageProps<"/trong-ky/task/[kpiTaskId]">) {
   const u = await yeuCauNguoiLamKpi();
   const { kpiTaskId } = await props.params;
+  // Mở từ trang Cuối kỳ thì nút quay lại về Cuối kỳ.
+  const tuCuoiKy = (await props.searchParams).tu === "cuoi-ky";
   const kt = await db.kpiTask.findUnique({
     where: { id: kpiTaskId },
     include: { ky: true, task: { include: { nhiemVu: { select: { ten: true } } } } },
@@ -37,8 +39,11 @@ export default async function TrangTaskCuaToi(props: PageProps<"/cuoi-ky/task/[k
   return (
     <div className="space-y-6">
       <div>
-        <Link href={`/cuoi-ky?kyId=${kt.kyId}`} className="mb-2 inline-flex items-center text-sm text-muted-foreground hover:underline">
-          <ChevronLeft className="size-4" /> Cuối kỳ
+        <Link
+          href={`/${tuCuoiKy ? "cuoi-ky" : "trong-ky"}?kyId=${kt.kyId}`}
+          className="mb-2 inline-flex items-center text-sm text-muted-foreground hover:underline"
+        >
+          <ChevronLeft className="size-4" /> {tuCuoiKy ? "Cuối kỳ" : "Trong kỳ"}
         </Link>
         <TrangTieuDe tieuDe={kt.task.ten} moTa={`${kt.task.nhiemVu.ten} · ${kt.ky.ten} · Deadline: ${hienNgayGio(deadline(kt.ky))}`}>
           <div className="flex items-center gap-2">

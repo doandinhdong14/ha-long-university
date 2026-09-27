@@ -35,7 +35,7 @@ Chỗ đặc tả chưa rõ: chọn cách đơn giản nhất, ghi vào `NOTES.m
 - Ma trận quyền đầy đủ: mục 12.3.
 
 ### Một bộ code dùng chung cho mọi cấp
-- **Luồng KPI** (Đầu kỳ, Cuối kỳ của GV, TBM, TK, HP), **màn hình Duyệt** (TBM→GV, TK→TBM, HP→TK, HT→HP), **màn hình Chốt** (TK→GV, HP→TBM, HT→TK) và **Xuất báo cáo** (TBM, TK, HP, HT): mỗi thứ là **một bộ route + component + service**, chỉ khác tham số (ai duyệt, ai chốt, phạm vi, nhãn chức danh).
+- **Luồng KPI** (Đầu kỳ, Trong kỳ, Cuối kỳ của GV, TBM, TK, HP), **màn hình Duyệt** (TBM→GV, TK→TBM, HP→TK, HT→HP), **màn hình Chốt** (TK→GV, HP→TBM, HT→TK) và **Xuất báo cáo** (TBM, TK, HP, HT): mỗi thứ là **một bộ route + component + service**, chỉ khác tham số (ai duyệt, ai chốt, phạm vi, nhãn chức danh).
 - Khác biệt giữa các cấp khai báo trong **một bảng cấu hình** chuỗi duyệt – chốt. Không copy file/route riêng cho từng vai trò, không rải `if (role === ...)` trong component.
 - Task của HP là trường hợp riêng duy nhất (HT vừa duyệt vừa chốt bằng 2 nút, không dùng `CHO_CHOT`/`TRA_VE`): xử lý bằng một cờ trong bảng cấu hình, vẫn dùng chung code.
 
@@ -53,7 +53,7 @@ Chỗ đặc tả chưa rõ: chọn cách đơn giản nhất, ghi vào `NOTES.m
 ### Giao diện tiếng Việt
 - Toàn bộ chữ trên giao diện, thông báo lỗi, thông báo trong web và nội dung file Excel/PDF viết bằng tiếng Việt có dấu.
 - Tên model và tên trường giữ như đặc tả (`kyId`, `trangThai`…). URL viết tiếng Việt không dấu, dạng kebab-case (vd `/dau-ky`).
-- Menu theo vai trò khai báo trong `src/lib/menu.ts`, đúng các mục ở bảng 2.1: GV 3, TBM 5, TK 6, HP 6, HT 4, Admin 4 mục.
+- Menu theo vai trò khai báo trong `src/lib/menu.ts`, theo bảng 2.1, riêng mục "Cuối kỳ" tách thành Trong kỳ + Cuối kỳ (`NOTES.md`): GV 4, TBM 6, TK 7, HP 7, HT 4, Admin 4 mục.
 
 ## Ngoài phạm vi (mục 14): KHÔNG làm
 - 5 mục + HGT của Admin

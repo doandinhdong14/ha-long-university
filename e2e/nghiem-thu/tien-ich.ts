@@ -79,7 +79,7 @@ export async function duyetDangKy(page: Page, nguoiDuyet: string, nguoiLam: stri
 
 /** Người làm KPI nộp minh chứng cho một task (trang chi tiết task). */
 export async function nop(page: Page, kpiTaskId: string, file = PDF_MAU) {
-  await page.goto(`/cuoi-ky/task/${kpiTaskId}`);
+  await page.goto(`/trong-ky/task/${kpiTaskId}`);
   await page.getByLabel("File minh chứng").setInputFiles(file);
   await page.getByRole("button", { name: "Gửi minh chứng" }).click();
   await expect(page.getByText(/Đã nộp minh chứng, chờ .* duyệt\./)).toBeVisible();
