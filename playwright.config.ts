@@ -19,6 +19,8 @@ export default defineConfig({
     channel: "chrome",
     locale: "vi-VN",
     timezoneId: "Asia/Ho_Chi_Minh",
+    // Lưu trace khi test lỗi để chẩn đoán (npx playwright show-trace test-results/…/trace.zip).
+    trace: "retain-on-failure",
   },
   webServer: {
     command: "npx next start -p 3100",

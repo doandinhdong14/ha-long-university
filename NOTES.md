@@ -261,3 +261,24 @@ Ghi lại các quyết định cho chỗ đặc tả chưa rõ, những gì đã
 
 **Còn tồn**
 - Không có.
+
+## Bước 11 – Admin Xem cấu hình + Thông báo ✅
+
+**Đã làm**
+- `/admin/cau-hinh?tab=…&kyId=…` (chỉ xem, không có nút sửa/xóa/duyệt/chốt), 6 tab:
+  - **Kỳ và bảng xếp loại**: mọi kỳ (kể cả chưa công bố), hạn đăng ký/deadline, 4 bảng xếp loại + số nhiệm vụ mỗi vị trí
+  - **Tài khoản và cơ cấu**: cảnh báo đơn vị thiếu người duyệt/chốt (`canhBaoThieuNguoi`), cây khoa → bộ môn với TK, HP phụ trách, TBM, số GV; bảng tài khoản kèm đơn vị
+  - **Đăng ký nhiệm vụ** của từng người (4 vị trí): trạng thái, số nhiệm vụ, điểm, xếp loại, thời điểm gửi/duyệt, người duyệt + nhận xét
+  - **Tiến độ task và minh chứng**: %, 5 phần biểu đồ, task vượt (hàm `taiKetQua` chung); trang `/admin/cau-hinh/nguoi/[userId]` xem biểu đồ, từng task với lịch sử nộp (mở xem/tải file), nhật ký xử lý, nhận xét người chốt
+  - **Kết quả các kỳ** (`KetQuaKy`, kèm vị trí lúc chốt, lý do task thiếu)
+  - **Quy định đã ban hành** + "x/y đã xem"; `/admin/cau-hinh/quy-dinh/[id]` ai đã xem/chưa, lọc theo vị trí (admin xem ở đây không bị tính là đã xem)
+- Thông báo: chuông ở header (giữ từ v1.1: số chưa đọc, danh sách 20 thông báo mới nhất, bấm vào → đánh dấu đã đọc và đi tới trang liên quan, tự tải lại mỗi 60 giây). Đủ các sự kiện mục 11 (tạo ở các bước 5–10).
+- Test: tích hợp `tests/thong-bao.int.test.ts` 5 (chuỗi sự kiện mục 11: gửi đăng ký → người duyệt, duyệt → người làm, nộp → người duyệt, gửi lên → người chốt, chốt → người làm + người duyệt, không báo người thao tác, trả về → người duyệt (người làm không nhận), xin thêm; API chuông chỉ trả thông báo của mình, 401 khi chưa đăng nhập, đánh dấu đọc chỉ tác động của mình); E2E `e2e/buoc-11-cau-hinh.spec.ts` 4/4.
+- **Hồi quy toàn bộ: unit 54, tích hợp 79, E2E 65 – tất cả pass.**
+
+**Tự chọn**
+- Trang tiến độ một người của admin không dùng `ChiTietTaskQuanLy` (vốn có nút thao tác) mà ghép `LichSuNop` + `NhatKyTask` để chắc chắn chỉ xem.
+- Bật `trace: "retain-on-failure"` cho Playwright: một lần chạy cả bộ E2E có 1 test bước 7 bị treo tới timeout, chạy lại (cả bộ và lặp 3 lần riêng) đều đạt; nếu lặp lại sẽ có trace để chẩn đoán.
+
+**Còn tồn**
+- Lỗi chập chờn E2E nói trên chưa tái hiện được.
