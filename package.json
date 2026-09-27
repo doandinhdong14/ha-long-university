@@ -19,7 +19,8 @@
     "postinstall": "prisma generate",
     "test:int": "vitest run --config vitest.int.config.mts",
     "release": "prisma migrate deploy && prisma db seed",
-    "cron:chot-ky": "node scripts/cron-chot-ky.mjs"
+    "cron:chot-ky": "node scripts/cron-chot-ky.mjs",
+    "nghiem-thu": "playwright test e2e/nghiem-thu"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

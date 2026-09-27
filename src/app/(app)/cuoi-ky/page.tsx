@@ -173,7 +173,7 @@ function NoiDungCuoiKy(props: {
           <BieuDoTron tk={kq.thongKe} phanTram={kq.phanTram} />
           <div className="space-y-3">
             <div className="text-sm" data-testid="dang-treo">
-              Đang treo: <strong>{kq.thongKe.dangTreo}</strong> task
+              Đang treo: <strong>{kq.soTreo}</strong> task
             </div>
             <div>
               <div className="text-xs text-muted-foreground">Xếp loại đăng ký</div>
@@ -182,7 +182,7 @@ function NoiDungCuoiKy(props: {
               </div>
             </div>
             {kq.taskVuot.length > 0 && (
-              <Badge className="bg-emerald-600 text-white" data-testid="task-vuot">
+              <Badge className="bg-primary text-primary-foreground" data-testid="task-vuot">
                 +{kq.taskVuot.length} task vượt
               </Badge>
             )}

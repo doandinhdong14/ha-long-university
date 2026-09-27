@@ -22,7 +22,8 @@ const exe = (name) => join(BIN, process.platform === "win32" ? `${name}.exe` : n
 
 const DATA_DIR = join(process.cwd(), ".devdb");
 const PORT = 5433;
-const DB_NAMES = ["crm_kpi_v14", "crm_kpi_v14_test"]; // _test dùng cho test tích hợp + E2E
+// _test dùng cho test tích hợp + E2E; _nt_test cho lượt nghiệm thu chạy riêng (song song lượt E2E khác).
+const DB_NAMES = ["crm_kpi_v14", "crm_kpi_v14_test", "crm_kpi_v14_nt_test"];
 
 const lenh = process.argv[2] ?? "start";
 

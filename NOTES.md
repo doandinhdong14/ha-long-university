@@ -351,3 +351,16 @@ Lần deploy đầu, bước pre-deploy tạo bảng và seed dữ liệu demo: 
 
 **Còn tồn**
 - Không có (ngoài việc deploy thật do bạn thực hiện).
+
+### Deploy thật (27/09/2026)
+- Project Railway `halong-kpi-crm` (region US West): `app`, `Postgres`, `cron`, Volume `app-volume` gắn `/data`. Domain: https://app-production-b269.up.railway.app. Repo thật: `doandinhdong14/ha-long-university` (không phải `halong-kpi-crm` như mục 0 ở trên).
+- Vấn đề: Railway đã bỏ Config-as-Code cho project mới — không đọc `preDeployCommand` trong `railway.json`, API từ chối đặt "Railway config file path" (`/railway.cron.json`). Quyết định: đặt thẳng trong Settings của service. `app`: build `npm run build`, pre-deploy `npm run release`, start `npm run start`, restart ON_FAILURE ×5, `PORT=8080` (khớp domain). `cron`: lịch `5 17 * * *`, start `npm run cron:chot-ky`, restart NEVER. Lý do: cách đơn giản nhất còn chạy được; hai file `railway*.json` giữ lại làm tài liệu.
+- Vấn đề: API Railway không nhận `healthcheckPath` có dấu gạch ngang (`/dang-nhap`), còn `/` trả 307. Quyết định: để trống healthcheck. Lý do: app có Volume nên Railway luôn tắt bản cũ rồi mới bật bản mới, healthcheck không giúp gì thêm.
+- Railway chưa được cài GitHub App nên chưa xem được repo → lần đầu upload bằng `railway up` từ `git archive HEAD` (commit `070a018`). Muốn tự deploy khi push: cài Railway GitHub App cho repo, rồi service `app` → Settings → Source → Connect Repo, nhánh `main`.
+- `cron` được upload từ một thư mục riêng chỉ có `package.json` + `scripts/cron-chot-ky.mjs` (không có `railway.json` của app). Không nối `cron` với repo GitHub, để khỏi dính cấu hình của app.
+- Đã kiểm tra: `/dang-nhap` 200, `/api/bao-cao` 401 khi chưa đăng nhập, cron đúng secret trả `ok:true`, sai secret 401; đăng nhập `admin.quantri` và `tbm.phamthibich` đúng menu.
+
+## Giao diện toàn hệ thống – tông xanh blue (ngoài 12 bước)
+- **Vấn đề:** đồng bộ giao diện cả hệ thống với trang `/gioi-thieu` (logo trường, tông xanh `#1877F2`, không dùng xanh lá).
+- **Quyết định:** chỉ đổi phần trình bày. Cụ thể: token màu trong `globals.css` (thêm màu `navy` cho tiêu đề); header có logo và ảnh đại diện chữ tắt; sidebar có biểu tượng theo đường dẫn (bề rộng giữ `w-60` vì thanh tổng kết Đầu kỳ dùng `md:left-60`); trang đăng nhập chia 2 cột; card, bảng, nút. Các màu trạng thái trước đây là xanh lá: "Đã chốt" và "Đạt" chuyển sang xanh blue, "Vượt chỉ tiêu" chuyển sang vàng. Không sửa server action, route, service, luật hay dữ liệu; giữ nguyên chữ, label và cấu trúc `aside nav a` / `header` mà E2E dùng.
+- **Lý do:** yêu cầu "chỉ đổi giao diện, không động vào backend, cách hoạt động".

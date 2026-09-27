@@ -5,11 +5,11 @@ import { hienPhanTram, type ThongKe } from "@/lib/ket-qua";
 
 // 5 phần của biểu đồ tròn task bắt buộc (mục 5.2).
 const PHAN = [
-  { key: "daChot", nhan: "Đã chốt", mau: "#10b981" },
+  { key: "daChot", nhan: "Đã chốt", mau: "#1877f2" },
   { key: "dangTreo", nhan: "Đang treo", mau: "#8b5cf6" },
   { key: "choDuyet", nhan: "Chờ duyệt", mau: "#f59e0b" },
   { key: "tuChoi", nhan: "Bị từ chối", mau: "#ef4444" },
-  { key: "chuaLam", nhan: "Chưa làm", mau: "#d4d4d8" },
+  { key: "chuaLam", nhan: "Chưa làm", mau: "#e4e6eb" },
 ] as const;
 
 /** Biểu đồ tròn task bắt buộc, giữa là % hoàn thành (chỉ đếm Đã chốt, không vượt 100%). */

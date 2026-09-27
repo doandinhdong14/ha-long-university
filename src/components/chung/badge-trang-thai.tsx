@@ -7,12 +7,12 @@ const MAU: Record<string, string> = {
   CHO_DUYET: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
   TU_CHOI: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200",
   TRA_VE: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
-  DA_DUYET: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200",
+  DA_DUYET: "bg-accent text-accent-foreground dark:bg-primary/20 dark:text-blue-200",
   CHO_CHOT: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200",
-  DA_CHOT: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+  DA_CHOT: "bg-primary text-primary-foreground",
 };
 
-/** Trạng thái đăng ký "Đã duyệt" là trạng thái cuối → màu xanh lá như "Đã chốt". */
+/** Trạng thái đăng ký "Đã duyệt" là trạng thái cuối → cùng màu với "Đã chốt". */
 const MAU_DANG_KY_DUYET = MAU.DA_CHOT;
 
 export function BadgeTrangThai({

@@ -102,7 +102,7 @@ export function ChuongThongBao() {
                 onClick={() => moThongBao(tb)}
                 className={cn(
                   "block w-full border-b px-3 py-2 text-left text-sm hover:bg-muted",
-                  !tb.daDoc && "bg-sky-50 dark:bg-sky-950/30",
+                  !tb.daDoc && "bg-accent dark:bg-primary/15",
                 )}
                 data-thong-bao
                 data-da-doc={tb.daDoc}

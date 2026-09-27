@@ -245,8 +245,8 @@ function BannerTrangThai({
         </div>
       )}
       {tt === "DA_DUYET" && (
-        <div className={cn(khung, "border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30")}>
-          <CheckCircle2 className="mt-0.5 size-5 text-emerald-600" />
+        <div className={cn(khung, "border-primary/40 bg-accent dark:bg-primary/15")}>
+          <CheckCircle2 className="mt-0.5 size-5 text-primary" />
           <div>
             <div className="flex items-center gap-2 font-medium">
               Trạng thái: <BadgeTrangThai trangThai="DA_DUYET" nhan={NHAN_DANG_KY.DA_DUYET} />

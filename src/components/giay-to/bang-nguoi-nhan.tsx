@@ -71,7 +71,7 @@ export function BangNguoiNhan({
                 <TableCell>{TEN_VAI_TRO[n.role]}</TableCell>
                 <TableCell>
                   {n.daXemLuc ? (
-                    <span className="text-emerald-700">Đã xem · {hienNgayGio(n.daXemLuc)}</span>
+                    <span className="text-primary">Đã xem · {hienNgayGio(n.daXemLuc)}</span>
                   ) : (
                     <span className="text-muted-foreground">Chưa xem</span>
                   )}

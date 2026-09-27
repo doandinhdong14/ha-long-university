@@ -62,7 +62,7 @@ function DongTask({ t, lyDoKhoa }: { t: TaskMoRong; lyDoKhoa: string | null }) {
         )}
       </div>
       <div className="flex items-center gap-2">
-        {t.tinhTrang === "DA_GIAO" && <Badge className="bg-emerald-600 text-white">Đã được giao</Badge>}
+        {t.tinhTrang === "DA_GIAO" && <Badge className="bg-primary text-primary-foreground">Đã được giao</Badge>}
         {t.tinhTrang === "DANG_CHO" && <Badge variant="outline">Đang chờ duyệt</Badge>}
         {coTheXin && (
           <Button

@@ -17,7 +17,7 @@ export default defineConfig({
     testTimeout: 60_000,
     hookTimeout: 120_000,
     env: {
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5433/crm_kpi_v14_test",
+      DATABASE_URL: process.env.INT_DATABASE_URL || "postgresql://postgres:postgres@localhost:5433/crm_kpi_v14_test",
       UPLOAD_DIR: "./uploads-test",
       AUTH_SECRET: "test-secret-chi-dung-cho-kiem-thu",
       CRON_SECRET: "test-cron-secret",

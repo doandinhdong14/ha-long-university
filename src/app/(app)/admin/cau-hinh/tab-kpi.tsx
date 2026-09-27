@@ -137,8 +137,8 @@ export async function TabTienDo({ ky, cc }: { ky: Ky; cc: CoCau }) {
 
 const MAU_KQ = {
   KHONG_DAT: "bg-red-100 text-red-800",
-  DAT: "bg-emerald-100 text-emerald-800",
-  VUOT: "bg-sky-100 text-sky-800",
+  DAT: "bg-accent text-accent-foreground",
+  VUOT: "bg-amber-100 text-amber-800",
 } as const;
 
 export async function TabKetQua({ ky, cc }: { ky: Ky; cc: CoCau }) {

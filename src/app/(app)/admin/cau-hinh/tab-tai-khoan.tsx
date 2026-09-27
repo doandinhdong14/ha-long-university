@@ -30,7 +30,7 @@ export async function TabTaiKhoan() {
         </div>
       ) : (
         <div className="flex items-center gap-2 rounded-lg border bg-background p-4 text-sm" data-testid="du-nguoi">
-          <CheckCircle2 className="size-5 text-emerald-600" /> Mọi đơn vị đã có đủ người duyệt và người chốt.
+          <CheckCircle2 className="size-5 text-primary" /> Mọi đơn vị đã có đủ người duyệt và người chốt.
         </div>
       )}
 

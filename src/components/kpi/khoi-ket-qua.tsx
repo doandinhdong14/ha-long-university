@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 
 const KIEU = {
   KHONG_DAT: { icon: XCircle, khung: "border-red-300 bg-red-50 dark:bg-red-950/30", mau: "text-red-700 dark:text-red-300" },
-  DAT: { icon: CheckCircle2, khung: "border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30", mau: "text-emerald-700 dark:text-emerald-300" },
-  VUOT: { icon: Award, khung: "border-sky-300 bg-sky-50 dark:bg-sky-950/30", mau: "text-sky-700 dark:text-sky-300" },
+  DAT: { icon: CheckCircle2, khung: "border-primary/40 bg-accent dark:bg-primary/15", mau: "text-primary" },
+  VUOT: { icon: Award, khung: "border-amber-300 bg-amber-50 dark:bg-amber-950/30", mau: "text-amber-700 dark:text-amber-300" },
 } as const;
 
 /**
