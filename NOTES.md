@@ -240,3 +240,24 @@ Ghi lại các quyết định cho chỗ đặc tả chưa rõ, những gì đã
 
 **Còn tồn**
 - Không có.
+
+## Bước 10 – Ban hành quy định + Nhận giấy tờ + Admin Nhận chỉ thị ✅
+
+**Đã làm**
+- `src/lib/services/van-ban.ts`:
+  - `banHanhQuyDinh`: tiêu đề, nội dung, file đính kèm (cùng luật minh chứng, không bắt buộc), **tick vị trí nhận** (GV, TBM, TK, HP, Admin; ≥1); lưu `VanBan.viTriNhan`; thông báo "Quy định mới" cho mọi tài khoản đang ở các vị trí được tick (link theo vai trò: Admin → Nhận chỉ thị, còn lại → Nhận giấy tờ)
+  - người nhận tính theo **chức vụ hiện tại** mỗi lần xem (`viTriNhan has role`): người thêm vào sau cũng thấy, đổi chức vụ thì thấy quy định của vị trí mới
+  - `danhDauDaXem` (lần đầu mở, chỉ người nhận), `nguoiNhanHienTai` ("x/y đã xem", x chỉ đếm trong y người đang ở vị trí nhận – B11)
+- `POST /api/quy-dinh` (chỉ HT). Quyền file quy định: HT, người có vị trí được tick, Admin (`quyen-file.ts` bước 6).
+- HT: `/quy-dinh` (danh sách đã ban hành: tiêu đề, ngày, vị trí nhận, "x/y đã xem"), `/quy-dinh/moi` (form, "Chọn tất cả", số người hiện tại mỗi vị trí), `/quy-dinh/[id]` (nội dung, file, ai đã xem / chưa, lọc theo vị trí).
+- Nhận: `/giay-to` + `/giay-to/[id]` (GV, TBM, TK, HP), `/admin/chi-thi` + `/admin/chi-thi/[id]` (Admin) dùng chung `src/components/giay-to/*`; nhãn **Mới** khi chưa xem; mở ra: nội dung + file (xem/tải).
+- `DanhSachFile` chuyển sang `src/components/chung/danh-sach-file.tsx` (dùng chung cho minh chứng và quy định).
+- Test: tích hợp `tests/van-ban.int.test.ts` 6 (chỉ HT ban hành, kiểm tra dữ liệu; tick GV + Admin → 3 GV + admin thấy, TBM/TK/HP không thấy, thông báo đúng người/đúng link; 1 GV mở → 1/4; GV mới → thấy, 1/5; đổi chức vụ; quyền file); E2E `e2e/buoc-10-quy-dinh.spec.ts` 5/5 (đủ 4 case phụ "ban hành quy định" mục 15 qua giao diện).
+
+**Tự chọn**
+- HT thấy mọi quy định đã ban hành (không chỉ của mình) – B11.
+- Ghi nhận đã xem bằng action gọi từ trình duyệt khi trang mở (không ghi lúc render, tránh prefetch đánh dấu nhầm) – giữ cách của v1.1.
+- Tiêu đề ≤300 ký tự, nội dung ≤20.000 ký tự, tối đa 10 file.
+
+**Còn tồn**
+- Không có.
