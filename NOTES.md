@@ -282,3 +282,72 @@ Ghi lại các quyết định cho chỗ đặc tả chưa rõ, những gì đã
 
 **Còn tồn**
 - Lỗi chập chờn E2E nói trên chưa tái hiện được.
+
+## Bước 12 – Chuẩn bị deploy Railway ✅ (chưa deploy; bạn tự đăng nhập Railway)
+
+**Đã làm**
+- Rà lại cấu hình deploy (giữ từ v1.1, vẫn đúng cho v1.4):
+  - `railway.json` (service app): builder Railpack, build `npm run build` (prisma generate + next build), pre-deploy `npm run release` (= `prisma migrate deploy && prisma db seed`; seed tự bỏ qua khi DB đã có dữ liệu), start `npm run start` (Next đọc `PORT` do Railway cấp), healthcheck `/dang-nhap`
+  - `railway.cron.json` (service cron, cùng repo): lịch `5 17 * * *` (UTC = 00:05 giờ VN), chạy `npm run cron:chot-ky` → `scripts/cron-chot-ky.mjs` gọi `POST {APP_URL}/api/cron/chot-ky` với `Authorization: Bearer <CRON_SECRET>` (chốt kỳ quá hạn + nhắc việc), lỗi thì thoát mã 1
+- Phụ thuộc cần lúc chạy đều ở `dependencies`: `prisma`, `tsx`, `dotenv` (bước pre-deploy), `pdfmake`, `exceljs` (xuất báo cáo, khai báo `serverExternalPackages`). Font PDF nằm trong repo (`assets/fonts/Roboto/`), đọc theo `process.cwd()` (thư mục gốc app trên Railway).
+- Đã mô phỏng ở máy (DB test): `npm run build` → `npm run release` (không có migration mới, seed bỏ qua) → `PORT=3200 npm run start` → `/dang-nhap` 200, `/` 307 → `/dang-nhap`, `/gioi-thieu` 200, `/api/bao-cao` chưa đăng nhập 401 → script cron đúng secret 200 `{"ok":true,"daChot":[],"nhacViec":{…}}`, sai secret 401 và thoát mã 1. Xuất PDF/Excel trên bản build production đã chạy qua E2E bước 9.
+
+### Hướng dẫn deploy lên Railway
+
+**0. Đưa code lên GitHub**
+Repo đã có remote `origin` = `https://github.com/doandinhdong14-afk/halong-kpi-crm.git`, nhánh `main`. Đẩy các commit mới nhất:
+```bash
+git push origin main
+```
+
+**1. Tạo project + service app**
+- Railway → New Project → Deploy from GitHub repo → chọn `halong-kpi-crm`, nhánh `main`. Đặt tên service là **`app`**.
+- Railway tự đọc `railway.json` ở gốc repo (build, pre-deploy, start, healthcheck).
+
+**2. Thêm PostgreSQL**: trong project → New → Database → **PostgreSQL** (tên mặc định `Postgres`).
+
+**3. Gắn Volume cho app**: chuột phải service `app` → Attach Volume → mount path **`/data`**.
+Không tăng số replica của app lên >1 (Volume chỉ gắn được 1 instance).
+
+**4. Biến môi trường của service `app`** (tab Variables):
+| Biến | Giá trị |
+|---|---|
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+| `AUTH_SECRET` | chuỗi ngẫu nhiên ≥32 ký tự, vd chạy `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
+| `CRON_SECRET` | một chuỗi ngẫu nhiên khác |
+| `UPLOAD_DIR` | `/data/uploads` |
+| `TZ` | `Asia/Ho_Chi_Minh` |
+
+**5. Tạo domain**: service `app` → Settings → Networking → Generate Domain. Deploy lại nếu cần.
+Lần deploy đầu, bước pre-deploy tạo bảng và seed dữ liệu demo: 8 tài khoản (mật khẩu `123456`), 1 khoa, 1 bộ môn, **Kỳ 1 – 2026-2027 bắt đầu đúng ngày deploy**, 26 nhiệm vụ cho 4 vị trí, 4 bảng xếp loại.
+
+**6. Service cron**
+- Trong project → New → GitHub repo → cùng repo, nhánh `main`. Đặt tên **`cron`**.
+- Settings → Config-as-code → Railway config file path: **`/railway.cron.json`**. Kiểm tra Settings → Cron Schedule hiện `5 17 * * *`.
+- Variables của `cron`:
+  | Biến | Giá trị |
+  |---|---|
+  | `APP_URL` | `https://${{app.RAILWAY_PUBLIC_DOMAIN}}` |
+  | `CRON_SECRET` | `${{app.CRON_SECRET}}` |
+- Railway Cron chạy theo **UTC**: `5 17 * * *` = 00:05 giờ Việt Nam.
+
+**7. Kiểm tra sau deploy**
+- Mở domain → đăng nhập `admin.quantri` / `123456` → Phân việc đầu kỳ thấy "Kỳ 1 – 2026-2027" Đã công bố, 10 · 6 · 5 · 5 nhiệm vụ.
+- Đăng nhập lần lượt 8 tài khoản seed, mỗi người đúng menu (bảng 2.1).
+- Nộp thử một file minh chứng, redeploy app, file vẫn mở được → Volume hoạt động.
+- Xuất thử một báo cáo PDF (vd `tbm.phamthibich` → Xuất báo cáo) → tiếng Việt hiển thị đúng.
+- Chạy cron thử: service `cron` → Deployments → Run now (hoặc từ máy):
+  `curl -X POST -H "Authorization: Bearer <CRON_SECRET>" https://<domain>/api/cron/chot-ky`
+  → `{"ok":true,"daChot":[],"nhacViec":{…}}`.
+
+**Lưu ý vận hành**
+- Hạn đăng ký của kỳ seed là 23:59 ngày deploy (B17). Trước buổi demo: admin sửa ngày bắt đầu kỳ (Phân việc đầu kỳ → chi tiết kỳ → Lưu ngày), hoặc làm lại DB từ máy bằng `DATABASE_URL="<DATABASE_PUBLIC_URL của Postgres>" npm run db:reset` (xóa sạch dữ liệu, chỉ bạn chạy).
+- Kịch bản nghiệm thu mục 15: admin dùng nút **Chốt kỳ ngay** thay vì chờ cron.
+- File nằm trên Volume, không nằm trong backup của Postgres → sao lưu Volume riêng nếu cần.
+- Upload đi qua route handler (không qua proxy nên không bị cắt 10MB); tối đa 10 file × 20MB mỗi lần nộp.
+
+**Chưa kiểm chứng được ở máy**
+- Chưa chạy thật trên Railway (không có tài khoản). Nếu dashboard báo `preDeployCommand`/`cronSchedule` sai định dạng, chỉnh trực tiếp trong Settings: Pre-deploy `npm run release`; cron `5 17 * * *`, start `npm run cron:chot-ky`.
+
+**Còn tồn**
+- Không có (ngoài việc deploy thật do bạn thực hiện).
