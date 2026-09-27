@@ -16,6 +16,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { PhanHeMenu } from "@/components/phan-he/phan-he-menu";
 import { cn } from "@/lib/utils";
 import type { MucMenu } from "@/lib/menu";
 
@@ -36,7 +37,10 @@ const ICON: Record<string, LucideIcon> = {
 
 export function AppSidebar({ menu }: { menu: MucMenu[] }) {
   const pathname = usePathname();
+  // Khối "Phân hệ mở rộng" chỉ gắn dưới menu Admin (docs/spec-admin-menu.md).
+  const laMenuAdmin = menu.some((m) => m.href.startsWith("/admin/"));
   return (
+    <>
     <nav className="flex gap-1 overflow-x-auto md:flex-col">
       {menu.map((m) => {
         const active = pathname === m.href || pathname.startsWith(`${m.href}/`);
@@ -65,5 +69,7 @@ export function AppSidebar({ menu }: { menu: MucMenu[] }) {
         );
       })}
     </nav>
+    {laMenuAdmin && <PhanHeMenu />}
+    </>
   );
 }
