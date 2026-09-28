@@ -19,7 +19,7 @@ export type DongTongQuan = {
   dangKy: { trangThai: TrangThaiDangKy; xepLoai: string | null; tongDiem: number } | null;
   demTask: Partial<Record<TrangThaiTask, number>>;
   /** Kết quả đã chốt kỳ (chỉ có sau khi chốt kỳ). */
-  ketQuaKy: { ketQua: KetQua; xepLoai: string } | null;
+  ketQuaKy: { ketQua: KetQua; xepLoai: string; phanTram: number } | null;
 };
 
 /** Bảng người + số liệu cho tab Tổng quan trong một kỳ. */
@@ -33,7 +33,7 @@ export async function tongQuanDuyet(m: NguoiDung, kyId: string): Promise<DongTon
       select: { userId: true, trangThai: true, xepLoai: true, tongDiem: true },
     }),
     db.kpiTask.groupBy({ by: ["userId", "trangThai"], where: { kyId, userId: { in: ids }, task: TASK_DANG_DUNG }, _count: true }),
-    db.ketQuaKy.findMany({ where: { kyId, userId: { in: ids } }, select: { userId: true, ketQua: true, xepLoai: true } }),
+    db.ketQuaKy.findMany({ where: { kyId, userId: { in: ids } }, select: { userId: true, ketQua: true, xepLoai: true, phanTram: true } }),
   ]);
   return ds.map((nguoi) => {
     const dk = dangKys.find((d) => d.userId === nguoi.id);

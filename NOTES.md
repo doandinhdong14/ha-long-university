@@ -536,3 +536,19 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 **Tự chọn**
 - Màu vòng ngoài vàng `#eab308` (cùng tông "Vượt chỉ tiêu"), màu "Đã nộp" xanh da trời `#0ea5e9` (không dùng xanh lá, theo quy ước giao diện).
 - Tiêu đề thẻ tổng quan đổi "Tổng quan task bắt buộc" → "Tổng quan KPI" vì có thêm phần cải tiến.
+
+## v1.6 – Bước 8: Bảng Tổng quan, Excel, PDF, thông báo (mục 6) ✅
+
+**Đã làm**
+- **Màn hình Duyệt – Tổng quan** (6.1): cột "% hoàn thành" → **"Đánh giá cấp trên %"** (kèm dòng tách nhỏ); thêm **"Tự đánh giá %"** và **"Cải tiến"** (Không đăng ký / trạng thái task cải tiến); cột Kết quả sau chốt kỳ dùng cùng nhãn mục 4.2 ("Vượt chỉ tiêu – A1 (110%)"). Ô/cột "Chưa gửi lên", "Xin thêm chờ duyệt" đã bỏ ở bước 3, 4.
+- **Excel** (6.3): sheet Đăng ký nhiệm vụ thêm cột **"Đăng ký cải tiến (Có/Không)"**, "Các nhiệm vụ đã chọn" không gồm nhiệm vụ cải tiến; sheet Kết quả: **"Đánh giá cấp trên %"**, thêm **"% bắt buộc"**, **"Tự đánh giá %"**, cột "Task vượt" → **"Cải tiến sáng tạo"** (Không đăng ký / Chưa chốt / Đã chốt); sheet Chi tiết task: Loại là "Bắt buộc" hoặc "Cải tiến sáng tạo". Kỳ đã chốt lấy số liệu từ `KetQuaKy` (có 3 cột mới).
+- **PDF** (6.3): chỉ đổi cột "Task vượt" → **"Cải tiến sáng tạo"** (bảng Kết quả và phần 1 người), không thêm cột.
+- **Thông báo** (6.4): bỏ nhắc "Còn N task đã duyệt chưa gửi lên" (`nhac-viec.ts`); thông báo xin thêm task đã hết cùng chức năng (bước 4); "người duyệt → người chốt" bắn khi Duyệt (bước 3); giữ nhắc người chốt "Còn N task chờ chốt" và HT "Còn N task đã duyệt chưa chốt"; không có thông báo cho mục Theo dõi (bước 9).
+- Test: `tests/bao-cao.int.test.ts` (cột mới, giá trị %, Có/Không, Loại, PDF có "Cải tiến sáng tạo" và không còn "Task vượt"); E2E `e2e/v16-07-bieu-do.spec.ts` thêm test bảng Tổng quan (8/8); nhắc việc ở `tests/kich-ban.int.test.ts` (bước 6).
+
+**Tự chọn**
+- PDF: để giữ đúng "mọi nơi hiện % đều có dòng tách" (4.1) mà không thêm cột, ô "% hoàn thành" ghi 2 dòng: tổng % và "(Bắt buộc X% · Cải tiến +10%)". Tiêu đề cột "% hoàn thành" của PDF giữ nguyên vì 6.3 chỉ cho đổi cột "Task vượt".
+- Cột "Cải tiến" của bảng Tổng quan hiện nhãn trạng thái task cải tiến như bộ lọc (Chưa làm / Chờ duyệt / Chờ chốt / Đã chốt …).
+
+**Test cũ sửa theo hành vi mới**
+- `tests/bao-cao.int.test.ts` › "nội dung Excel": danh sách cột 2 sheet theo 6.3, dòng GV đọc theo cột mới, thêm người có cải tiến; "sau khi chốt kỳ": cột Tình trạng nay là cột 13; "PDF": thêm kiểm tra cột Cải tiến sáng tạo.

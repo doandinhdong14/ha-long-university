@@ -48,6 +48,10 @@ beforeAll(async () => {
   await dangKyVaDuyet("tbm.phamthibich");
   await dangKyVaDuyet("tk.levankhoa");
   await dangKyVaDuyet("hp.tranthiphuong");
+  // v1.6: gv.levancuong có đăng ký cải tiến, chỉ task cải tiến được chốt → cấp trên 10%, bắt buộc 0%, Không đạt.
+  await dangKyVaDuyet("gv.levancuong", { caiTien: true });
+  const ct = (await taskCua("gv.levancuong")).find((t) => t.task.loai === "CAI_TIEN")!;
+  await lamTask("gv.levancuong", ct.id, "DA_CHOT");
 });
 
 describe("phạm vi xuất báo cáo theo vai trò (mục 6.3)", () => {
@@ -90,11 +94,14 @@ describe("nội dung Excel", () => {
     const wb = await excel(res);
     expect(wb.worksheets.map((w) => w.name)).toEqual(["Đăng ký nhiệm vụ", "Kết quả", "Chi tiết task"]);
     const cot = (ten: string) => (wb.getWorksheet(ten)!.getRow(4).values as unknown[]).slice(1);
+    // v1.6 (mục 6.3): thêm cột Đăng ký cải tiến; Kết quả thêm % bắt buộc, Tự đánh giá %, đổi tên % hoàn thành và Task vượt.
     expect(cot("Đăng ký nhiệm vụ")).toEqual([
       "STT", "Họ tên", "Tên đăng nhập", "Chức vụ", "Đơn vị", "Trạng thái đăng ký", "Các nhiệm vụ đã chọn", "Tổng điểm", "Xếp loại",
+      "Đăng ký cải tiến (Có/Không)",
     ]);
     expect(cot("Kết quả")).toEqual([
-      "STT", "Họ tên", "Chức vụ", "Đơn vị", "% hoàn thành", "Kết quả", "Xếp loại", "Task còn thiếu (kèm lý do)", "Số task đang treo", "Task vượt", "Tình trạng",
+      "STT", "Họ tên", "Chức vụ", "Đơn vị", "Đánh giá cấp trên %", "% bắt buộc", "Tự đánh giá %", "Kết quả", "Xếp loại",
+      "Task còn thiếu (kèm lý do)", "Số task đang treo", "Cải tiến sáng tạo", "Tình trạng",
     ]);
     expect(cot("Chi tiết task")).toEqual([
       "STT", "Họ tên", "Chức vụ", "Nhiệm vụ", "Task", "Loại", "Trạng thái", "Được tính (Có/Không)", "Ngày nộp gần nhất", "Số lần nộp",
@@ -102,22 +109,35 @@ describe("nội dung Excel", () => {
     ]);
     const kq = wb.getWorksheet("Kết quả")!;
     expect(String(kq.getCell("A1").value)).toContain("(TẠM TÍNH)");
-    let binh: unknown[] = [];
-    kq.eachRow((row) => {
-      if (row.getCell(2).value === "Trần Thị Bình") binh = (row.values as unknown[]).slice(1);
-    });
-    // v1.6: đăng ký đủ 10 nhiệm vụ (100 điểm) → A1; 1/22 task bắt buộc đã chốt → Không đạt.
-    expect(binh.slice(2, 4)).toEqual(["Giáo viên", "Bộ môn Khoa học máy tính"]);
-    expect(binh[4]).toMatch(/^[0-9]+([,.][0-9])?%$/);
-    expect(binh.slice(5, 7)).toEqual(["Không đạt", "A1"]);
-    expect(binh[10]).toBe("Tạm tính");
+    const dongCua = (ws: ExcelJS.Worksheet, ten: string) => {
+      let d: unknown[] = [];
+      ws.eachRow((row) => {
+        if (row.getCell(2).value === ten) d = (row.values as unknown[]).slice(1);
+      });
+      return d;
+    };
+    // v1.6: đăng ký đủ 10 nhiệm vụ (100 điểm) → A1; 1/22 task bắt buộc đã chốt (5%) → Không đạt; không đăng ký cải tiến.
+    const binh = dongCua(kq, "Trần Thị Bình");
+    expect(binh.slice(2, 9)).toEqual(["Giáo viên", "Bộ môn Khoa học máy tính", "5%", "5%", "5%", "Không đạt", "A1"]);
+    expect(binh.slice(11, 13)).toEqual(["Không đăng ký", "Tạm tính"]);
+    // Có cải tiến đã chốt, bắt buộc chưa chốt task nào: cấp trên 10% (0% + 10%), vẫn Không đạt.
+    const cuong = dongCua(kq, "Lê Văn Cường");
+    expect(cuong.slice(4, 9)).toEqual(["10%", "0%", "10%", "Không đạt", "A1"]);
+    expect(cuong[11]).toBe("Đã chốt");
+    const dk = wb.getWorksheet("Đăng ký nhiệm vụ")!;
+    expect(dongCua(dk, "Lê Văn Cường")[9]).toBe("Có");
+    expect(dongCua(dk, "Trần Thị Bình")[9]).toBe("Không");
+    // Các nhiệm vụ đã chọn không gồm nhiệm vụ cải tiến.
+    expect(String(dongCua(dk, "Lê Văn Cường")[6])).not.toContain("Đăng ký cải tiến sáng tạo");
     const ct = wb.getWorksheet("Chi tiết task")!;
     const dongChot: unknown[][] = [];
     ct.eachRow((row) => {
       if (row.getCell(8).value === "Có") dongChot.push((row.values as unknown[]).slice(1));
     });
-    expect(dongChot).toHaveLength(1);
-    expect(dongChot[0][6]).toBe("Đã chốt");
+    expect(dongChot).toHaveLength(2);
+    expect(dongChot.map((d) => d[6])).toEqual(["Đã chốt", "Đã chốt"]);
+    // Cột Loại: Bắt buộc hoặc Cải tiến sáng tạo.
+    expect(dongChot.map((d) => d[5]).sort()).toEqual(["Bắt buộc", "Cải tiến sáng tạo"]);
   });
 });
 
@@ -149,6 +169,11 @@ describe("nội dung PDF", () => {
       for (const d of chuKy) expect(chu, u).toContain(d);
       for (const d of donVi) expect(chu, u).toContain(d);
       expect(chu).toContain("(Ký, ghi rõ họ tên)");
+      // v1.6: cột "Task vượt" đổi thành "Cải tiến sáng tạo"; % kèm dòng tách trong cùng ô.
+      expect(chu).toContain("Cải tiến sáng tạo");
+      expect(chu).not.toContain("Task vượt");
+      expect(chu).toContain("Không đăng ký");
+      expect(chu).toContain("Bắt buộc 0% · Cải tiến +10%");
       if (u === "ht.nguyenvanhieu") expect(chu).not.toContain("PHÓ HIỆU TRƯỞNG");
     }
   });
@@ -174,6 +199,6 @@ describe("nội dung PDF", () => {
     const wb = await excel(await goi({ kyId, viTri: "GV", dinhDang: "xlsx" }));
     const kq = wb.getWorksheet("Kết quả")!;
     expect(String(kq.getCell("A1").value)).not.toContain("TẠM TÍNH");
-    expect(kq.getRow(5).getCell(11).value).toBe("Đã chốt kỳ");
+    expect(kq.getRow(5).getCell(13).value).toBe("Đã chốt kỳ");
   });
 });

@@ -48,26 +48,27 @@ function bang(tieuDeMuc: string, tieuDe: string[], dong: TableCell[][], widths: 
 }
 
 const taskThieu = (n: DongNguoi) => n.ketQua.taskThieu.map((t) => `• ${t.ten} – ${t.lyDo}`).join("\n");
-const taskVuot = (n: DongNguoi) => n.ketQua.taskVuot.map((t) => `• ${t.ten}`).join("\n");
+// % luôn kèm dòng tách "Bắt buộc X% · Cải tiến +10%" (spec-v1.6 mục 4.1) – trong cùng ô, không thêm cột.
+const phanTram = (n: DongNguoi) => `${hienPhanTram(n.ketQua.phanTram)}\n(${n.ketQua.dongTach})`;
 const ketQua = (n: DongNguoi) => (n.ketQua.ghiChu ? `${n.ketQua.ketQua}\n(${n.ketQua.ghiChu})` : n.ketQua.ketQua);
 
 function bangKetQua(d: DuLieuBaoCao): Content {
   return bang(
     "I. KẾT QUẢ THỰC HIỆN",
-    ["STT", "Họ tên", "Chức vụ", "Đơn vị", "% hoàn thành", "Kết quả", "Xếp loại", "Task còn thiếu (lý do)", "Số task treo", "Task vượt"],
+    ["STT", "Họ tên", "Chức vụ", "Đơn vị", "% hoàn thành", "Kết quả", "Xếp loại", "Task còn thiếu (lý do)", "Số task treo", "Cải tiến sáng tạo"],
     d.nguois.map((n, i) => [
       String(i + 1),
       n.hoTen,
       n.chucVu,
       n.donVi,
-      hienPhanTram(n.ketQua.phanTram),
+      phanTram(n),
       ketQua(n),
       n.ketQua.xepLoai,
       taskThieu(n),
       String(n.ketQua.soTreo),
-      taskVuot(n),
+      n.ketQua.caiTien,
     ]),
-    [22, 80, 60, 80, 45, 60, 38, "*", 38, 110],
+    [22, 80, 60, 80, 60, 60, 38, "*", 38, 70],
   );
 }
 
@@ -132,11 +133,11 @@ function motNguoi(d: DuLieuBaoCao, n: DongNguoi): Content[] {
       table: {
         widths: [150, "*"],
         body: [
-          ["% hoàn thành (task bắt buộc đã chốt)", hienPhanTram(n.ketQua.phanTram)],
+          ["% hoàn thành", phanTram(n)],
           ["Kết quả thực hiện", ketQua(n)],
           ["Xếp loại đăng ký", n.ketQua.xepLoai],
           ["Task còn thiếu (lý do)", taskThieu(n) || "—"],
-          ["Task vượt (đã chốt)", taskVuot(n) || "—"],
+          ["Cải tiến sáng tạo", n.ketQua.caiTien],
           ["Số task đang treo", String(n.ketQua.soTreo)],
           ["Tình trạng", d.tinhTrang],
         ],

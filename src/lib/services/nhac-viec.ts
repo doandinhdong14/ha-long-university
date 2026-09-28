@@ -1,7 +1,8 @@
 // Nhắc việc (mục 11, B12), chạy cùng cron mỗi ngày:
 // - còn ≤3 ngày đến hạn đăng ký → người làm KPI chưa gửi đăng ký;
 // - còn ≤7 ngày đến deadline → người làm KPI còn task bắt buộc chưa được chốt;
-// - mốc 7 ngày và 2 ngày trước deadline → người duyệt: "Còn N task đã duyệt chưa gửi lên" (HT với HP: "chưa chốt");
+// - mốc 7 ngày và 2 ngày trước deadline → HT: "Còn N task đã duyệt chưa chốt" (task HP);
+//   v1.6 (spec-v1.6 mục 6.4): bỏ nhắc "Còn N task đã duyệt chưa gửi lên" của chuỗi GV/TBM/TK (không còn bước Gửi lên);
 //   người chốt: "Còn N task chờ chốt".
 // Mỗi mốc gửi 1 lần / người / kỳ (ThongBao.maSuKien); dùng "≤" để cron lỡ một ngày vẫn nhắc. Chỉ gửi khi N > 0.
 import "server-only";
@@ -71,26 +72,20 @@ export async function guiNhacViec(now: Date = new Date()) {
       where: { kyId: ky.id, trangThai: { in: ["DA_DUYET", "CHO_CHOT"] }, task: TASK_DANG_DUNG },
       select: { trangThai: true, user: { select: { id: true, role: true, boMonId: true, khoaId: true } } },
     });
-    const demDuyet = new Map<string, number>();
     const demDuyetGop = new Map<string, number>();
     const demChot = new Map<string, number>();
     for (const t of treo) {
       if (!laDoiTuong(t.user.role)) continue;
       if (t.trangThai === "DA_DUYET") {
+        // Chỉ task HP còn dừng ở Đã duyệt (HT duyệt rồi mới chốt).
+        if (!CHUOI[t.user.role].gopDuyetChot) continue;
         const id = nguoiDuyet(t.user, cc)?.id;
-        const bang = CHUOI[t.user.role].gopDuyetChot ? demDuyetGop : demDuyet;
-        if (id) bang.set(id, (bang.get(id) ?? 0) + 1);
+        if (id) demDuyetGop.set(id, (demDuyetGop.get(id) ?? 0) + 1);
       } else {
         const id = nguoiChot(t.user, cc)?.id;
         if (id) demChot.set(id, (demChot.get(id) ?? 0) + 1);
       }
     }
-    kq.nguoiDuyet += await guiTheoDem(
-      demDuyet,
-      (n) => `${hanChot}. Còn ${n} task đã duyệt chưa gửi lên.`,
-      `${LINK.duyetTongQuan(ky.id)}&tab=hang-cho`,
-      `nhac-duyet-${moc}:${ky.id}`,
-    );
     kq.nguoiDuyet += await guiTheoDem(
       demDuyetGop,
       (n) => `${hanChot}. Còn ${n} task đã duyệt chưa chốt.`,

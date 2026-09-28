@@ -172,3 +172,25 @@ test("sau chốt kỳ: Không đạt (90% + cải tiến = 100%), Vượt chỉ 
     "Cải tiến sáng tạo đã đăng ký nhưng chưa được chốt – Chờ duyệt, chưa được duyệt kịp",
   );
 });
+
+test("màn hình Duyệt – Tổng quan: cột Đánh giá cấp trên %, Tự đánh giá %, Cải tiến, Kết quả; không còn Chưa gửi lên / Xin thêm", async ({ page }) => {
+  await dangNhap(page, "tk.levankhoa"); // TK duyệt TBM
+  await page.goto("/duyet");
+  const tieuDe = await page.locator("thead th").allInnerTexts();
+  expect(tieuDe).toEqual(expect.arrayContaining(["Đánh giá cấp trên %", "Tự đánh giá %", "Cải tiến", "Kết quả"]));
+  expect(tieuDe).not.toContain("% hoàn thành");
+  expect(tieuDe).not.toContain("Chưa gửi lên");
+  expect(tieuDe).not.toContain("Xin thêm chờ duyệt");
+  const dong = page.locator('tr[data-nguoi="tbm.phamthibich"]');
+  await expect(dong.locator('[data-cot="phan-tram"]')).toContainText("100%");
+  await expect(dong.locator('[data-cot="phan-tram"]')).toContainText("Bắt buộc 100% · Cải tiến: chưa chốt");
+  await expect(dong.locator('[data-cot="tu-danh-gia"]')).toHaveText("110%");
+  await expect(dong.locator('[data-cot="cai-tien"]')).toHaveText("Chờ duyệt");
+  await expect(dong.locator('[data-cot="ket-qua"]')).toHaveText("Đạt – A1");
+
+  await dangNhap(page, "tbm.phamthibich"); // TBM duyệt GV
+  await page.goto("/duyet");
+  await expect(page.locator('tr[data-nguoi="gv.tranthibinh"] [data-cot="cai-tien"]')).toHaveText("Không đăng ký");
+  await expect(page.locator('tr[data-nguoi="gv.levancuong"] [data-cot="cai-tien"]')).toHaveText("Đã chốt");
+  await expect(page.locator('tr[data-nguoi="gv.levancuong"] [data-cot="ket-qua"]')).toHaveText("Vượt chỉ tiêu – A1 (110%)");
+});

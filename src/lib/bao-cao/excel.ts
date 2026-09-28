@@ -1,4 +1,4 @@
-// Xuất Excel (mục 6.3): 3 sheet Đăng ký nhiệm vụ | Kết quả | Chi tiết task.
+// Xuất Excel (mục 6.3; spec-v1.6 mục 6.3): 3 sheet Đăng ký nhiệm vụ | Kết quả | Chi tiết task.
 import "server-only";
 import ExcelJS from "exceljs";
 import { hienPhanTram } from "@/lib/ket-qua";
@@ -62,6 +62,7 @@ export async function taoExcel(d: DuLieuBaoCao): Promise<Buffer> {
       { tieuDe: "Các nhiệm vụ đã chọn", rong: 60 },
       { tieuDe: "Tổng điểm", rong: 10 },
       { tieuDe: "Xếp loại", rong: 10 },
+      { tieuDe: "Đăng ký cải tiến (Có/Không)", rong: 14 },
     ],
     d.nguois.map((n, i) => [
       i + 1,
@@ -73,6 +74,7 @@ export async function taoExcel(d: DuLieuBaoCao): Promise<Buffer> {
       n.dangKy.nhiemVus.map((nv) => `${nv.ten} (${nv.diem})`).join("\n"),
       n.dangKy.tongDiem ?? "",
       n.dangKy.xepLoai ?? "",
+      n.dangKy.caiTien ? "Có" : "Không",
     ]),
   );
 
@@ -85,12 +87,14 @@ export async function taoExcel(d: DuLieuBaoCao): Promise<Buffer> {
       { tieuDe: "Họ tên", rong: 24 },
       { tieuDe: "Chức vụ", rong: 16 },
       { tieuDe: "Đơn vị", rong: 28 },
-      { tieuDe: "% hoàn thành", rong: 12 },
+      { tieuDe: "Đánh giá cấp trên %", rong: 14 },
+      { tieuDe: "% bắt buộc", rong: 11 },
+      { tieuDe: "Tự đánh giá %", rong: 12 },
       { tieuDe: "Kết quả", rong: 18 },
       { tieuDe: "Xếp loại", rong: 10 },
       { tieuDe: "Task còn thiếu (kèm lý do)", rong: 60 },
       { tieuDe: "Số task đang treo", rong: 12 },
-      { tieuDe: "Task vượt", rong: 40 },
+      { tieuDe: "Cải tiến sáng tạo", rong: 16 },
       { tieuDe: "Tình trạng", rong: 14 },
     ],
     d.nguois.map((n, i) => [
@@ -99,11 +103,13 @@ export async function taoExcel(d: DuLieuBaoCao): Promise<Buffer> {
       n.chucVu,
       n.donVi,
       hienPhanTram(n.ketQua.phanTram),
+      hienPhanTram(n.ketQua.phanTramBatBuoc),
+      hienPhanTram(n.ketQua.tuDanhGia),
       n.ketQua.ghiChu ? `${n.ketQua.ketQua} (${n.ketQua.ghiChu})` : n.ketQua.ketQua,
       n.ketQua.xepLoai,
       n.ketQua.taskThieu.map((t) => `${t.ten} – ${t.nhiemVu}: ${t.lyDo}`).join("\n"),
       n.ketQua.soTreo,
-      n.ketQua.taskVuot.map((t) => `${t.ten} – ${t.nhiemVu}`).join("\n"),
+      n.ketQua.caiTien,
       d.tinhTrang,
     ]),
   );
@@ -138,7 +144,7 @@ export async function taoExcel(d: DuLieuBaoCao): Promise<Buffer> {
       { tieuDe: "Chức vụ", rong: 16 },
       { tieuDe: "Nhiệm vụ", rong: 32 },
       { tieuDe: "Task", rong: 36 },
-      { tieuDe: "Loại", rong: 10 },
+      { tieuDe: "Loại", rong: 16 },
       { tieuDe: "Trạng thái", rong: 20 },
       { tieuDe: "Được tính (Có/Không)", rong: 12 },
       { tieuDe: "Ngày nộp gần nhất", rong: 18 },

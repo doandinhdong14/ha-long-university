@@ -8,10 +8,10 @@ import { khoaPhuTrach, phamViBaoCao, tenDonVi } from "@/lib/co-cau";
 import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import type { KetQuaTinh, MucThieu, MucVuot } from "@/lib/ket-qua";
-import { DUOC_TINH } from "@/lib/ket-qua";
+import { dongTachPhanTram, DUOC_TINH } from "@/lib/ket-qua";
 import { nhanChoQuanLy } from "@/lib/kpi/trang-thai";
 import { LoiNghiepVu } from "@/lib/loi";
-import { NHAN_DANG_KY, NHAN_KET_QUA, NHAN_LOAI_TASK } from "@/lib/nhan";
+import { NHAN_CAI_TIEN, NHAN_DANG_KY, NHAN_KET_QUA, NHAN_LOAI_TASK } from "@/lib/nhan";
 import { DOI_TUONGS, TEN_VAI_TRO } from "@/lib/roles";
 import { taiCoCau } from "@/lib/services/co-cau";
 import { taiKetQua } from "@/lib/services/ket-qua";
@@ -37,9 +37,24 @@ export type DongNguoi = {
   role: DoiTuong;
   chucVu: string;
   donVi: string;
-  dangKy: { trangThai: string; nhiemVus: { ten: string; diem: number }[]; tongDiem: number | null; xepLoai: string | null };
+  dangKy: {
+    trangThai: string;
+    /** Nhiệm vụ thường đã đăng ký (không gồm nhiệm vụ cải tiến). */
+    nhiemVus: { ten: string; diem: number }[];
+    tongDiem: number | null;
+    xepLoai: string | null;
+    /** v1.6: có đăng ký cải tiến sáng tạo không. */
+    caiTien: boolean;
+  };
   ketQua: {
+    /** Đánh giá cấp trên % (đã cộng +10 cải tiến, tối đa 110). */
     phanTram: number;
+    phanTramBatBuoc: number;
+    tuDanhGia: number;
+    /** "Bắt buộc X% · Cải tiến +10%" … (spec-v1.6 mục 4.1). */
+    dongTach: string;
+    /** Không đăng ký / Chưa chốt / Đã chốt. */
+    caiTien: string;
     ketQua: string;
     xepLoai: string;
     taskThieu: MucThieu[];
@@ -89,7 +104,7 @@ export async function layDuLieuBaoCao(
   const [dangKys, kpiTasks, ketQuaDaChot, tamTinh] = await Promise.all([
     db.dangKy.findMany({
       where: { kyId: ky.id, userId: { in: ids } },
-      include: { nhiemVus: { include: { nhiemVu: { select: { ten: true, diem: true, thuTu: true } } } } },
+      include: { nhiemVus: { include: { nhiemVu: { select: { ten: true, diem: true, thuTu: true, laCaiTien: true } } } } },
     }),
     db.kpiTask.findMany({
       where: { kyId: ky.id, userId: { in: ids }, task: TASK_DANG_DUNG },
@@ -159,13 +174,23 @@ export async function layDuLieuBaoCao(
         trangThai: dk ? NHAN_DANG_KY[dk.trangThai] : "Chưa đăng ký",
         nhiemVus: (dk?.nhiemVus ?? [])
           .map((x) => x.nhiemVu)
+          .filter((nv) => !nv.laCaiTien)
           .sort((a, b) => a.thuTu - b.thuTu)
           .map((nv) => ({ ten: nv.ten, diem: nv.diem })),
         tongDiem: dk && dk.trangThai !== "NHAP" ? dk.tongDiem : null,
         xepLoai: dk && dk.trangThai !== "NHAP" ? dk.xepLoai : null,
+        caiTien: !!dk?.nhiemVus.some((x) => x.nhiemVu.laCaiTien),
       },
       ketQua: {
         phanTram: kq.phanTram,
+        phanTramBatBuoc: kq.phanTramBatBuoc,
+        tuDanhGia: kq.tuDanhGia,
+        dongTach: dongTachPhanTram(
+          "cap-tren",
+          kq.phanTramBatBuoc,
+          kq.trangThaiCaiTien === "KHONG_DANG_KY" ? null : kq.trangThaiCaiTien === "DA_CHOT",
+        ),
+        caiTien: NHAN_CAI_TIEN[kq.trangThaiCaiTien],
         ketQua: NHAN_KET_QUA[kq.ketQua],
         xepLoai: kq.xepLoai,
         taskThieu: kq.taskThieu,

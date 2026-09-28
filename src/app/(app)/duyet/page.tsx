@@ -8,9 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { yeuCauVaiTro } from "@/lib/auth/dal";
 import { CHUOI, viTriDuocDuyet } from "@/lib/kpi/chuoi";
 import { tenMuc } from "@/lib/menu";
-import { NHAN_DANG_KY, NHAN_KET_QUA } from "@/lib/nhan";
+import { NHAN_DANG_KY, NHAN_TASK } from "@/lib/nhan";
 import { TEN_VAI_TRO } from "@/lib/roles";
-import { hienPhanTram } from "@/lib/ket-qua";
+import { dongTach, hienPhanTram } from "@/lib/ket-qua";
+import { tieuDeKetQua } from "@/components/kpi/khoi-ket-qua";
 import { tongQuanDuyet } from "@/lib/services/duyet";
 import { taiKetQua } from "@/lib/services/ket-qua";
 import { dsChonKy, layKyTheoUrl } from "@/lib/services/ky";
@@ -97,7 +98,9 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
                 <TableRow>
                   <TableHead>Họ tên</TableHead>
                   <TableHead>Đăng ký</TableHead>
-                  <TableHead className="text-right">% hoàn thành</TableHead>
+                  <TableHead className="text-right">Đánh giá cấp trên %</TableHead>
+                  <TableHead className="text-right">Tự đánh giá %</TableHead>
+                  <TableHead>Cải tiến</TableHead>
                   <TableHead className="text-right">Chờ duyệt</TableHead>
                   {gop && <TableHead className="text-right">Chưa chốt</TableHead>}
                   {!gop && <TableHead className="text-right">Chờ chốt</TableHead>}
@@ -109,50 +112,60 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
               <TableBody>
                 {dong.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
                       Chưa có ai trong phạm vi duyệt của bạn.
                     </TableCell>
                   </TableRow>
                 )}
-                {dong.map((d) => (
-                  <TableRow key={d.nguoi.id} data-nguoi={d.nguoi.username}>
-                    <TableCell>
-                      <div className="font-medium">{d.nguoi.hoTen}</div>
-                      <div className="text-xs text-muted-foreground">{d.nguoi.username}</div>
-                    </TableCell>
-                    <TableCell>
-                      {d.dangKy ? (
-                        <div className="flex items-center gap-2">
-                          <BadgeTrangThai trangThai={d.dangKy.trangThai} nhan={NHAN_DANG_KY[d.dangKy.trangThai]} laDangKy />
-                          {d.dangKy.trangThai !== "NHAP" && (
-                            <span className="text-sm">
-                              {d.dangKy.xepLoai} · {d.dangKy.tongDiem} điểm
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Chưa đăng ký</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums" data-cot="phan-tram">
-                      {hienPhanTram(ketQua.get(d.nguoi.id)?.phanTram ?? 0)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{d.demTask.CHO_DUYET ?? 0}</TableCell>
-                    {gop && <TableCell className="text-right tabular-nums">{d.demTask.DA_DUYET ?? 0}</TableCell>}
-                    {!gop && <TableCell className="text-right tabular-nums">{d.demTask.CHO_CHOT ?? 0}</TableCell>}
-                    {!gop && <TableCell className="text-right tabular-nums">{d.demTask.TRA_VE ?? 0}</TableCell>}
-                    {ky.daChot && (
-                      <TableCell data-cot="ket-qua" className="font-medium">
-                        {d.ketQuaKy ? `${NHAN_KET_QUA[d.ketQuaKy.ketQua]} – ${d.ketQuaKy.xepLoai}` : "—"}
+                {dong.map((d) => {
+                  const kq = ketQua.get(d.nguoi.id);
+                  return (
+                    <TableRow key={d.nguoi.id} data-nguoi={d.nguoi.username}>
+                      <TableCell>
+                        <div className="font-medium">{d.nguoi.hoTen}</div>
+                        <div className="text-xs text-muted-foreground">{d.nguoi.username}</div>
                       </TableCell>
-                    )}
-                    <TableCell>
-                      <Link href={`/duyet/${d.nguoi.id}?kyId=${ky.id}`} className="text-sm font-medium text-primary hover:underline">
-                        Xem
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      <TableCell>
+                        {d.dangKy ? (
+                          <div className="flex items-center gap-2">
+                            <BadgeTrangThai trangThai={d.dangKy.trangThai} nhan={NHAN_DANG_KY[d.dangKy.trangThai]} laDangKy />
+                            {d.dangKy.trangThai !== "NHAP" && (
+                              <span className="text-sm">
+                                {d.dangKy.xepLoai} · {d.dangKy.tongDiem} điểm
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Chưa đăng ký</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums" data-cot="phan-tram">
+                        <div>{hienPhanTram(kq?.phanTram ?? 0)}</div>
+                        {kq && <div className="text-xs text-muted-foreground">{dongTach("cap-tren", kq)}</div>}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums" data-cot="tu-danh-gia">
+                        {hienPhanTram(kq?.tuDanhGia ?? 0)}
+                      </TableCell>
+                      <TableCell className="text-sm" data-cot="cai-tien">
+                        {kq?.caiTien ? NHAN_TASK[kq.caiTien.trangThai] : "Không đăng ký"}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{d.demTask.CHO_DUYET ?? 0}</TableCell>
+                      {gop && <TableCell className="text-right tabular-nums">{d.demTask.DA_DUYET ?? 0}</TableCell>}
+                      {!gop && <TableCell className="text-right tabular-nums">{d.demTask.CHO_CHOT ?? 0}</TableCell>}
+                      {!gop && <TableCell className="text-right tabular-nums">{d.demTask.TRA_VE ?? 0}</TableCell>}
+                      {ky.daChot && (
+                        <TableCell data-cot="ket-qua" className="font-medium">
+                          {d.ketQuaKy ? tieuDeKetQua(d.ketQuaKy) : "—"}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <Link href={`/duyet/${d.nguoi.id}?kyId=${ky.id}`} className="text-sm font-medium text-primary hover:underline">
+                          Xem
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

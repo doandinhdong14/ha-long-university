@@ -1,6 +1,6 @@
 // Nhãn tiếng Việt cho các trạng thái. Nhãn task theo góc nhìn từng người (có chức danh người
 // duyệt/chốt) nằm ở src/lib/kpi/trang-thai.ts.
-import type { KetQua, LoaiTask, TrangThaiDangKy, TrangThaiDuyet, TrangThaiTask } from "@/generated/prisma/enums";
+import type { KetQua, LoaiTask, TrangThaiCaiTien, TrangThaiDangKy, TrangThaiDuyet, TrangThaiTask } from "@/generated/prisma/enums";
 
 export const NHAN_DANG_KY: Record<TrangThaiDangKy, string> = {
   NHAP: "Nháp",
@@ -30,6 +30,13 @@ export const NHAN_LOAI_TASK: Record<LoaiTask, string> = {
   BAT_BUOC: "Bắt buộc",
   MO_RONG: "Mở rộng",
   CAI_TIEN: "Cải tiến sáng tạo",
+};
+
+/** Cột "Cải tiến sáng tạo" của báo cáo (spec-v1.6 mục 6.3). */
+export const NHAN_CAI_TIEN: Record<TrangThaiCaiTien, string> = {
+  KHONG_DANG_KY: "Không đăng ký",
+  CHUA_CHOT: "Chưa chốt",
+  DA_CHOT: "Đã chốt",
 };
 
 export const NHAN_KET_QUA: Record<KetQua, string> = {
