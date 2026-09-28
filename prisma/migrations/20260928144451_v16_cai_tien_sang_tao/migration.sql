@@ -1,0 +1,13 @@
+-- CreateEnum
+CREATE TYPE "TrangThaiCaiTien" AS ENUM ('KHONG_DANG_KY', 'CHUA_CHOT', 'DA_CHOT');
+
+-- AlterEnum
+ALTER TYPE "LoaiTask" ADD VALUE 'CAI_TIEN';
+
+-- AlterTable
+ALTER TABLE "KetQuaKy" ADD COLUMN     "phanTramBatBuoc" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "trangThaiCaiTien" "TrangThaiCaiTien" NOT NULL DEFAULT 'KHONG_DANG_KY',
+ADD COLUMN     "tuDanhGia" DOUBLE PRECISION NOT NULL DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "NhiemVu" ADD COLUMN     "laCaiTien" BOOLEAN NOT NULL DEFAULT false;

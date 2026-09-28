@@ -5,6 +5,8 @@
 // - KpiTask.capNhatLuc: thời điểm đổi trạng thái gần nhất (sắp xếp Hàng chờ "cũ nhất lên trước")
 // - KetQuaKy.doiTuong: vị trí của người đó lúc chốt kỳ
 // - onDelete: Restrict phía nhiệm vụ/task đã có người đăng ký/làm (lớp bảo vệ thứ hai, mục 8.2)
+// v1.6 (docs/spec-v1.6.md mục 9.1): LoaiTask.CAI_TIEN, enum TrangThaiCaiTien, NhiemVu.laCaiTien,
+// KetQuaKy.phanTramBatBuoc / tuDanhGia / trangThaiCaiTien. MO_RONG, GUI_CHOT, YeuCauThemTask giữ lại, không dùng nữa.
 
 generator client {
   provider = "prisma-client"
@@ -34,7 +36,15 @@ enum DoiTuong {
 
 enum LoaiTask {
   BAT_BUOC
-  MO_RONG
+  MO_RONG // v1.6: không còn dùng, giữ để không mất dữ liệu
+  CAI_TIEN // v1.6: task duy nhất của nhiệm vụ cải tiến sáng tạo (+10%)
+}
+
+/// v1.6: trạng thái cải tiến sáng tạo trong kết quả kỳ.
+enum TrangThaiCaiTien {
+  KHONG_DANG_KY
+  CHUA_CHOT
+  DA_CHOT
 }
 
 enum TrangThaiDangKy {
@@ -72,7 +82,7 @@ enum HanhDongTask {
   DUYET
   TU_CHOI
   HUY_DUYET
-  GUI_CHOT
+  GUI_CHOT // v1.6: không ghi nữa (bỏ bước Gửi lên), giữ cho lịch sử cũ
   CHOT
   TRA_VE
 }
@@ -152,16 +162,18 @@ model BacXepLoai {
 }
 
 model NhiemVu {
-  id       String          @id @default(cuid())
-  kyId     String
-  ky       Ky              @relation(fields: [kyId], references: [id], onDelete: Cascade)
-  doiTuong DoiTuong
-  ten      String
-  moTa     String?
-  diem     Int
-  thuTu    Int             @default(0)
-  tasks    Task[]
-  dangKys  DangKyNhiemVu[]
+  id        String          @id @default(cuid())
+  kyId      String
+  ky        Ky              @relation(fields: [kyId], references: [id], onDelete: Cascade)
+  doiTuong  DoiTuong
+  ten       String
+  moTa      String?
+  diem      Int
+  thuTu     Int             @default(0)
+  /// v1.6: nhiệm vụ hệ thống "Đăng ký cải tiến sáng tạo" – mỗi (kỳ, vị trí) đúng 1, do damBaoNhiemVuCaiTien tạo.
+  laCaiTien Boolean         @default(false)
+  tasks     Task[]
+  dangKys   DangKyNhiemVu[]
 
   @@index([kyId, doiTuong])
 }
@@ -288,21 +300,27 @@ model YeuCauThemTask {
 }
 
 model KetQuaKy {
-  id        String   @id @default(cuid())
-  kyId      String
-  ky        Ky       @relation(fields: [kyId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String           @id @default(cuid())
+  kyId             String
+  ky               Ky               @relation(fields: [kyId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Vị trí của người này lúc chốt kỳ.
-  doiTuong  DoiTuong
-  phanTram  Float
-  ketQua    KetQua
-  xepLoai   String
-  taskThieu Json // [{ ten, nhiemVu, trangThai, lyDo }]
-  taskVuot  Json // [{ ten, nhiemVu }]
-  soTreo    Int      @default(0)
-  ghiChu    String?
-  chotLuc   DateTime @default(now())
+  doiTuong         DoiTuong
+  /// v1.6: tổng = % bắt buộc đã chốt + 10 nếu cải tiến đã chốt (tối đa 110).
+  phanTram         Float
+  /// v1.6: % task bắt buộc đã chốt.
+  phanTramBatBuoc  Float            @default(0)
+  /// v1.6: tự đánh giá = % task bắt buộc đã nộp + 10 nếu cải tiến đã nộp (tối đa 110).
+  tuDanhGia        Float            @default(0)
+  trangThaiCaiTien TrangThaiCaiTien @default(KHONG_DANG_KY)
+  ketQua           KetQua
+  xepLoai          String
+  taskThieu        Json // [{ ten, nhiemVu, trangThai, lyDo }]
+  taskVuot         Json // [{ ten, nhiemVu }] – v1.6: chỉ còn task cải tiến (khi đã chốt)
+  soTreo           Int              @default(0)
+  ghiChu           String?
+  chotLuc          DateTime         @default(now())
 
   @@unique([kyId, userId])
 }

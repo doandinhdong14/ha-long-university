@@ -13,7 +13,7 @@ export default async function TrangPhanViec() {
   await yeuCauVaiTro("ADMIN");
   const [kys, dem] = await Promise.all([
     db.ky.findMany({ orderBy: [{ ngayBatDau: "desc" }, { createdAt: "desc" }] }),
-    db.nhiemVu.groupBy({ by: ["kyId", "doiTuong"], _count: true }),
+    db.nhiemVu.groupBy({ by: ["kyId", "doiTuong"], where: { laCaiTien: false }, _count: true }),
   ]);
   const soNhiemVu = (kyId: string, doiTuong: string) =>
     dem.find((d) => d.kyId === kyId && d.doiTuong === doiTuong)?._count ?? 0;

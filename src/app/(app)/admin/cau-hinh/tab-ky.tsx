@@ -11,7 +11,7 @@ export async function TabKy({ kys, ky }: { kys: Ky[]; ky: Ky | null }) {
   const [bacs, demNv] = ky
     ? await Promise.all([
         db.bacXepLoai.findMany({ where: { kyId: ky.id }, orderBy: { diemToiThieu: "desc" } }),
-        db.nhiemVu.groupBy({ by: ["doiTuong"], where: { kyId: ky.id }, _count: true }),
+        db.nhiemVu.groupBy({ by: ["doiTuong"], where: { kyId: ky.id, laCaiTien: false }, _count: true }),
       ])
     : [[], []];
   return (

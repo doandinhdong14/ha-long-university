@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { damBaoNhiemVuCaiTien } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { kiemTraVaiTro } from "@/lib/auth/dal";
 import { chan, hanhDong, LoiNghiepVu } from "@/lib/loi";
@@ -69,6 +70,7 @@ export async function taoKy(input: z.input<typeof TaoKy>) {
         },
       });
       if (d.saoChepTuKyId) await saoChepKy(tx, d.saoChepTuKyId, ky.id);
+      else await damBaoNhiemVuCaiTien(tx, ky.id);
       return { id: ky.id };
     });
   });

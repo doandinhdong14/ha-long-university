@@ -31,7 +31,7 @@ export default async function TrangChiTietKy(props: PageProps<"/admin/phan-viec/
     include: {
       bacXepLoais: { where: { doiTuong: viTri }, orderBy: { diemToiThieu: "desc" } },
       nhiemVus: {
-        where: { doiTuong: viTri },
+        where: { doiTuong: viTri, laCaiTien: false },
         orderBy: [{ thuTu: "asc" }, { ten: "asc" }],
         include: {
           _count: { select: { dangKys: true } },
@@ -46,7 +46,7 @@ export default async function TrangChiTietKy(props: PageProps<"/admin/phan-viec/
   if (!ky) notFound();
 
   const [demNv, demBac, duyet, lyDoCongBo] = await Promise.all([
-    db.nhiemVu.groupBy({ by: ["doiTuong"], where: { kyId }, _count: true }),
+    db.nhiemVu.groupBy({ by: ["doiTuong"], where: { kyId, laCaiTien: false }, _count: true }),
     db.bacXepLoai.groupBy({ by: ["doiTuong"], where: { kyId }, _count: true }),
     db.dangKyNhiemVu.groupBy({
       by: ["nhiemVuId"],

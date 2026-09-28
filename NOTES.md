@@ -407,3 +407,22 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 **Hướng xử lý:** bỏ bước Gửi lên (mục 7.2, bước 3). Người duyệt bấm Duyệt là task sang `CHO_CHOT` ngay, nên hiện tượng này hết. Không có lỗi thật cần sửa thêm.
 
 **Chưa kiểm tra:** dữ liệu trên Railway (production) — tái hiện làm bằng seed như spec yêu cầu.
+
+## v1.6 – Bước 2: Schema + migration + seed + damBaoNhiemVuCaiTien ✅
+
+**Đã làm**
+- Schema (mục 9.1): `LoaiTask.CAI_TIEN`, enum `TrangThaiCaiTien`, `NhiemVu.laCaiTien`, `KetQuaKy.phanTramBatBuoc` / `tuDanhGia` / `trangThaiCaiTien`. Giữ `MO_RONG`, `GUI_CHOT`, bảng `YeuCauThemTask`. Migration `20260928144451_v16_cai_tien_sang_tao` chỉ thêm (không xóa, không đổi dữ liệu).
+- `src/lib/cai-tien.ts`: `THUONG_CAI_TIEN = 10`, mẫu nhiệm vụ/task cải tiến, `damBaoNhiemVuCaiTien(tx, kyId)` — mỗi vị trí GV/TBM/TK/HP đúng 1 nhiệm vụ `laCaiTien` (0 điểm, "Đăng ký cải tiến sáng tạo") có đúng 1 task `CAI_TIEN` ("Sản phẩm cải tiến sáng tạo"). Khóa `pg_advisory_xact_lock` theo kỳ nên chạy song song/chạy lại không trùng; thiếu task thì bổ sung.
+- Gọi ở: tạo kỳ (`taoKy`), sao chép kỳ (`saoChepKy` — không chép nhiệm vụ cải tiến và task Mở rộng của kỳ cũ, tạo lại bằng hàm này), seed.
+- Seed: bỏ task Mở rộng (giữ nguyên tài khoản, khoa, bộ môn, 26 nhiệm vụ, điểm, bảng xếp loại); gọi `damBaoNhiemVuCaiTien` cho **mọi kỳ** — kể cả khi DB đã có dữ liệu (seed bỏ qua phần tạo mới). Nhờ vậy bước `npm run release` trên Railway tự bổ sung nhiệm vụ cải tiến cho các kỳ có sẵn mà không cần reset.
+- Lọc `laCaiTien = false` ở các chỗ liệt kê/đếm nhiệm vụ thường: thẻ Đầu kỳ, admin Phân việc (danh sách + số nhiệm vụ mỗi vị trí + trang danh sách kỳ), Xem cấu hình tab Kỳ, điều kiện công bố (B13), `chonNhiemVu`.
+- DB dev đã làm trống và seed lại (TRUNCATE + seed như `resetDb` của test, chỉ trên `localhost/crm_kpi_v14`); chạy seed lần hai không tạo thêm gì.
+- Test: `tests/phan-viec.int.test.ts` thêm 3 test (seed đúng 1 cải tiến/vị trí + không còn task Mở rộng; chạy song song/chạy lại không trùng, thiếu task thì bổ sung; tạo kỳ mới có ngay 4 nhiệm vụ cải tiến nhưng vẫn chưa công bố được) và kiểm tra sao chép kỳ ra đúng 1 cải tiến/vị trí.
+
+**Tự chọn**
+- Nhiệm vụ cải tiến `thuTu = 100000` (luôn đứng cuối), mô tả nhiệm vụ ghi rõ là nhiệm vụ hệ thống.
+- Nhiệm vụ cải tiến **không** tính là "có nhiệm vụ" khi xét điều kiện công bố kỳ.
+
+**Test cũ sửa theo hành vi mới**
+- `tests/phan-viec.int.test.ts` › "công bố cần ≥1 nhiệm vụ…": tra nhiệm vụ vừa thêm bằng `laCaiTien: false` (kỳ mới nay luôn có sẵn 4 nhiệm vụ cải tiến).
+- `tests/phan-viec.int.test.ts` › "sao chép từ kỳ trước…": đếm nhiệm vụ thường bằng `laCaiTien: false`.

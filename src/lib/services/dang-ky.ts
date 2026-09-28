@@ -20,7 +20,7 @@ export async function chonNhiemVu(u: NguoiLamKpi, input: { kyId: string; nhiemVu
     const ky = await tx.ky.findUnique({ where: { id: input.kyId } });
     if (!ky || !ky.daCongBo) throw new LoiNghiepVu("Kỳ không tồn tại.", 404);
     const nv = await tx.nhiemVu.findFirst({
-      where: { id: input.nhiemVuId, kyId: ky.id, doiTuong: u.role },
+      where: { id: input.nhiemVuId, kyId: ky.id, doiTuong: u.role, laCaiTien: false },
       select: { id: true },
     });
     if (!nv) throw new LoiNghiepVu("Nhiệm vụ không thuộc kỳ này hoặc không dành cho vị trí của bạn.", 404);

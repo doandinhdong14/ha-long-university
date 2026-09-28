@@ -234,7 +234,7 @@ function DialogNhiemVu(
 
 function DialogTask({ nv, task, thuTuMoi }: { nv: NhiemVuHienThi; task?: TaskHienThi; thuTuMoi?: number }) {
   const [open, setOpen] = useState(false);
-  const [loai, setLoai] = useState<LoaiTask>(task?.loai ?? "BAT_BUOC");
+  const [loai, setLoai] = useState<"BAT_BUOC" | "MO_RONG">(task?.loai === "MO_RONG" ? "MO_RONG" : "BAT_BUOC");
   const { pending, chay } = useHanhDong();
   const khoaLoai = !!task?.daCoNguoiLam;
 
@@ -282,7 +282,7 @@ function DialogTask({ nv, task, thuTuMoi }: { nv: NhiemVuHienThi; task?: TaskHie
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="t-loai">Loại</Label>
-              <Select value={loai} onValueChange={(v) => setLoai(v as LoaiTask)} disabled={khoaLoai}>
+              <Select value={loai} onValueChange={(v) => setLoai(v as "BAT_BUOC" | "MO_RONG")} disabled={khoaLoai}>
                 <SelectTrigger id="t-loai" className="w-full">
                   <SelectValue />
                 </SelectTrigger>

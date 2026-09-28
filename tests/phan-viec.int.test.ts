@@ -36,6 +36,45 @@ describe("Phân việc đầu kỳ – quyền", () => {
   });
 });
 
+/** Số nhiệm vụ cải tiến (và task CAI_TIEN của chúng) theo vị trí trong một kỳ. */
+async function demCaiTien(kyId: string) {
+  const nvs = await db.nhiemVu.findMany({ where: { kyId, laCaiTien: true }, include: { tasks: true } });
+  const kq: Record<string, string> = {};
+  for (const nv of nvs) {
+    kq[nv.doiTuong] = kq[nv.doiTuong] ? "TRÙNG" : `${nv.diem} điểm, ${nv.tasks.map((t) => t.loai).join(",")}`;
+  }
+  return kq;
+}
+const MOT_CAI_TIEN_MOI_VI_TRI = { GV: "0 điểm, CAI_TIEN", TBM: "0 điểm, CAI_TIEN", TK: "0 điểm, CAI_TIEN", HP: "0 điểm, CAI_TIEN" };
+
+describe("v1.6 – nhiệm vụ cải tiến sáng tạo (damBaoNhiemVuCaiTien)", () => {
+  it("seed: mỗi vị trí đúng 1 nhiệm vụ cải tiến 0 điểm có 1 task CAI_TIEN; không có task Mở rộng", async () => {
+    expect(await demCaiTien(kySeedId)).toEqual(MOT_CAI_TIEN_MOI_VI_TRI);
+    expect(await db.task.count({ where: { loai: "MO_RONG" } })).toBe(0);
+  });
+
+  it("chạy lại nhiều lần không tạo trùng (kể cả chạy song song); thiếu task thì bổ sung", async () => {
+    const { damBaoNhiemVuCaiTien } = await import("@/lib/cai-tien");
+    const lan = await Promise.all([1, 2, 3].map(() => db.$transaction((tx) => damBaoNhiemVuCaiTien(tx, kySeedId))));
+    expect(lan).toEqual([0, 0, 0]);
+    const nv = await db.nhiemVu.findFirstOrThrow({ where: { kyId: kySeedId, laCaiTien: true, doiTuong: "TK" } });
+    await db.task.deleteMany({ where: { nhiemVuId: nv.id } });
+    expect(await db.$transaction((tx) => damBaoNhiemVuCaiTien(tx, kySeedId))).toBe(1);
+    expect(await demCaiTien(kySeedId)).toEqual(MOT_CAI_TIEN_MOI_VI_TRI);
+  });
+
+  it("tạo kỳ mới (không sao chép) → có ngay 4 nhiệm vụ cải tiến; không tính là nhiệm vụ để công bố", async () => {
+    await dangNhapNhu("admin.quantri");
+    const r = await taoKy({ ten: "Kỳ 4 – 2026-2027", namHoc: "2026-2027", soKy: 4, ngayBatDau: "2027-06-01", ngayKetThuc: "2027-08-31" });
+    expect(r.ok).toBe(true);
+    const kyId = r.ok ? r.data.id : "";
+    expect(await demCaiTien(kyId)).toEqual(MOT_CAI_TIEN_MOI_VI_TRI);
+    for (const d of ["GV", "TBM", "TK", "HP"]) await luuBangXepLoai({ kyId, doiTuong: d, bacs: BAC });
+    expect(await congBoKy(kyId)).toEqual({ ok: false, error: "Cần có ít nhất 1 nhiệm vụ trước khi công bố." });
+    await db.ky.delete({ where: { id: kyId } });
+  });
+});
+
 describe("tạo, sao chép, công bố kỳ", () => {
   it("sao chép từ kỳ trước: đủ nhiệm vụ, task, bảng xếp loại cả 4 vị trí; kỳ mới chưa công bố", async () => {
     await dangNhapNhu("admin.quantri");
@@ -51,8 +90,10 @@ describe("tạo, sao chép, công bố kỳ", () => {
     const kyId = r.ok ? r.data.id : "";
     const ky = await db.ky.findUniqueOrThrow({ where: { id: kyId } });
     expect(ky.daCongBo).toBe(false);
-    const dem = await db.nhiemVu.groupBy({ by: ["doiTuong"], where: { kyId }, _count: true, orderBy: { doiTuong: "asc" } });
+    const dem = await db.nhiemVu.groupBy({ by: ["doiTuong"], where: { kyId, laCaiTien: false }, _count: true, orderBy: { doiTuong: "asc" } });
     expect(Object.fromEntries(dem.map((d) => [d.doiTuong, d._count]))).toEqual({ GV: 10, TBM: 6, TK: 5, HP: 5 });
+    // v1.6: nhiệm vụ cải tiến của kỳ cũ không bị chép; kỳ mới có đúng 1 cải tiến mỗi vị trí (tạo lại).
+    expect(await demCaiTien(kyId)).toEqual(MOT_CAI_TIEN_MOI_VI_TRI);
     expect(await db.task.count({ where: { nhiemVu: { kyId } } })).toBe(await db.task.count({ where: { nhiemVu: { kyId: kySeedId } } }));
     expect(await db.bacXepLoai.count({ where: { kyId } })).toBe(24);
     expect(await db.bacXepLoai.count({ where: { kyId, doiTuong: "HP" } })).toBe(6);
@@ -77,7 +118,7 @@ describe("tạo, sao chép, công bố kỳ", () => {
     expect(await congBoKy(kyId)).toEqual({ ok: false, error: "Cần có ít nhất 1 nhiệm vụ trước khi công bố." });
 
     expect((await themNhiemVu({ kyId, doiTuong: "TBM", ten: "Nhiệm vụ TBM", diem: 20 })).ok).toBe(true);
-    const nv = await db.nhiemVu.findFirstOrThrow({ where: { kyId } });
+    const nv = await db.nhiemVu.findFirstOrThrow({ where: { kyId, laCaiTien: false } });
     expect(nv.doiTuong).toBe("TBM");
     expect(await congBoKy(kyId)).toEqual({
       ok: false,

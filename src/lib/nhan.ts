@@ -26,7 +26,11 @@ export const NHAN_DUYET: Record<TrangThaiDuyet, string> = {
   DA_DUYET: "Đã duyệt",
 };
 
-export const NHAN_LOAI_TASK: Record<LoaiTask, string> = { BAT_BUOC: "Bắt buộc", MO_RONG: "Mở rộng" };
+export const NHAN_LOAI_TASK: Record<LoaiTask, string> = {
+  BAT_BUOC: "Bắt buộc",
+  MO_RONG: "Mở rộng",
+  CAI_TIEN: "Cải tiến sáng tạo",
+};
 
 export const NHAN_KET_QUA: Record<KetQua, string> = {
   KHONG_DAT: "Không đạt",

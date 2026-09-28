@@ -28,7 +28,7 @@ export default async function TrangDauKy(props: PageProps<"/dau-ky">) {
 
   const [nhiemVus, bacs, dk, cc] = await Promise.all([
     db.nhiemVu.findMany({
-      where: { kyId: ky.id, doiTuong: u.role },
+      where: { kyId: ky.id, doiTuong: u.role, laCaiTien: false },
       orderBy: [{ thuTu: "asc" }, { ten: "asc" }],
       include: { tasks: { orderBy: [{ thuTu: "asc" }, { ten: "asc" }], select: { id: true, ten: true, loai: true } } },
     }),

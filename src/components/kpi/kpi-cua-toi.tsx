@@ -1,7 +1,7 @@
 // Phần giao diện KPI của chính người làm, dùng chung cho trang Trong kỳ và Cuối kỳ.
 import Link from "next/link";
 import { Info } from "lucide-react";
-import type { DoiTuong, TrangThaiTask } from "@/generated/prisma/enums";
+import type { DoiTuong, LoaiTask, TrangThaiTask } from "@/generated/prisma/enums";
 import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
 import { BieuDoTron } from "@/components/kpi/bieu-do-tron";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ export type KpiTaskCuaToi = {
   id: string;
   trangThai: TrangThaiTask;
   taskId: string;
-  task: { ten: string; loai: "BAT_BUOC" | "MO_RONG"; thuTu: number; nhiemVuId: string };
+  task: { ten: string; loai: LoaiTask; thuTu: number; nhiemVuId: string };
 };
 
 /** Danh sách nhiệm vụ chưa được duyệt: chưa có task để làm. */

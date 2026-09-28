@@ -1,5 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
+import { damBaoNhiemVuCaiTien } from "@/lib/cai-tien";
 import { LoiNghiepVu } from "@/lib/loi";
 import { DOI_TUONGS, TEN_VAI_TRO } from "@/lib/roles";
 
@@ -13,11 +14,15 @@ export async function layKyChuaChot(tx: Tx, kyId: string) {
   return ky;
 }
 
-/** Sao chép nhiệm vụ, task, bảng xếp loại (cả 4 vị trí) từ kỳ nguồn sang kỳ đích; không chép đăng ký. */
+/**
+ * Sao chép nhiệm vụ, task, bảng xếp loại (cả 4 vị trí) từ kỳ nguồn sang kỳ đích; không chép đăng ký.
+ * v1.6: không chép nhiệm vụ cải tiến và task Mở rộng của kỳ cũ; nhiệm vụ cải tiến của kỳ đích do
+ * damBaoNhiemVuCaiTien tạo lại.
+ */
 export async function saoChepKy(tx: Tx, tuKyId: string, sangKyId: string) {
   const nguon = await tx.ky.findUnique({
     where: { id: tuKyId },
-    include: { nhiemVus: { include: { tasks: true } }, bacXepLoais: true },
+    include: { nhiemVus: { where: { laCaiTien: false }, include: { tasks: { where: { loai: "BAT_BUOC" } } } }, bacXepLoais: true },
   });
   if (!nguon) throw new LoiNghiepVu("Kỳ nguồn để sao chép không tồn tại.", 404);
 
@@ -44,6 +49,7 @@ export async function saoChepKy(tx: Tx, tuKyId: string, sangKyId: string) {
       },
     });
   }
+  await damBaoNhiemVuCaiTien(tx, sangKyId);
 }
 
 /**
@@ -51,7 +57,7 @@ export async function saoChepKy(tx: Tx, tuKyId: string, sangKyId: string) {
  * vì chốt kỳ xếp loại cho cả 4 vị trí, kể cả người không đăng ký.
  */
 export async function lyDoChuaCongBoDuoc(tx: Tx, kyId: string): Promise<string | null> {
-  const soNv = await tx.nhiemVu.count({ where: { kyId } });
+  const soNv = await tx.nhiemVu.count({ where: { kyId, laCaiTien: false } });
   if (!soNv) return "Cần có ít nhất 1 nhiệm vụ trước khi công bố.";
   const bacs = await tx.bacXepLoai.groupBy({ by: ["doiTuong"], where: { kyId }, _count: true });
   const thieu = DOI_TUONGS.filter((d) => !bacs.some((b) => b.doiTuong === d));
