@@ -2,7 +2,7 @@
 // phạm vi báo cáo, cảnh báo thiếu người. Hàm thuần trên một "ảnh chụp" cơ cấu (tải ở
 // src/lib/services/co-cau.ts), nên unit test được. Luôn tính theo cơ cấu hiện tại, không lưu cứng.
 import type { DoiTuong, Role } from "@/generated/prisma/enums";
-import { CHUOI, PHAM_VI_BAO_CAO, viTriDuocChot, viTriDuocDuyet } from "@/lib/kpi/chuoi";
+import { CHUOI, PHAM_VI_BAO_CAO, PHAM_VI_THEO_DOI, viTriDuocChot, viTriDuocDuyet } from "@/lib/kpi/chuoi";
 import { chucDanh, laDoiTuong } from "@/lib/roles";
 
 /** Tối thiểu cần để xác định đơn vị của một người. */
@@ -107,6 +107,22 @@ export function phamViBaoCao(m: NguoiDonVi, cc: CoCau): { viTris: DoiTuong[]; ng
   const nguoi = cc.users.filter(
     (u) => u.id !== m.id && (viTris as readonly Role[]).includes(u.role) && trongDonVi(u),
   );
+  return { viTris, nguoi };
+}
+
+/**
+ * Phạm vi "Theo dõi kết quả đã chốt" (spec-v1.6 mục 8.2): HP → GV, TBM thuộc các khoa mình phụ trách; HT → GV, TBM,
+ * TK, HP toàn trường. Vai trò khác → rỗng. Dùng chung cho trang Theo dõi và quyền xem file.
+ */
+export function phamViTheoDoi(m: NguoiDonVi, cc: CoCau): { viTris: DoiTuong[]; nguoi: NguoiCoCau[] } {
+  const viTris = PHAM_VI_THEO_DOI[m.role] ?? [];
+  const khoas = m.role === "HP" ? khoaPhuTrach(m.id, cc) : null;
+  const nguoi = cc.users.filter((u) => {
+    if (u.id === m.id || !(viTris as readonly Role[]).includes(u.role)) return false;
+    if (!khoas) return true;
+    const khoa = khoaCua(u, cc);
+    return !!khoa && khoas.includes(khoa);
+  });
   return { viTris, nguoi };
 }
 

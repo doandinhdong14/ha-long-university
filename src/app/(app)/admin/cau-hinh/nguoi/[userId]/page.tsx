@@ -16,7 +16,7 @@ import { tenDonVi } from "@/lib/co-cau";
 import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { nhanChoQuanLy } from "@/lib/kpi/trang-thai";
-import { NHAN_DANG_KY, NHAN_LOAI_TASK } from "@/lib/nhan";
+import { NHAN_CAI_TIEN, NHAN_DANG_KY, NHAN_LOAI_TASK } from "@/lib/nhan";
 import { laDoiTuong, TEN_VAI_TRO } from "@/lib/roles";
 import { layCoCau } from "@/lib/services/co-cau";
 import { taiKetQua } from "@/lib/services/ket-qua";
@@ -66,7 +66,9 @@ export default async function TrangTienDoMotNguoi(props: PageProps<"/admin/cau-h
                 Tổng điểm {dk.tongDiem} · Xếp loại đăng ký <strong>{dk.xepLoai}</strong>
               </div>
             )}
-            <div>Đang treo: {kq.soTreo} task · Task vượt (đã chốt): {kq.taskVuot.length}</div>
+            <div>
+              Đang treo: {kq.soTreo} task · Cải tiến sáng tạo: {NHAN_CAI_TIEN[kq.trangThaiCaiTien]}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -552,3 +552,20 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 
 **Test cũ sửa theo hành vi mới**
 - `tests/bao-cao.int.test.ts` › "nội dung Excel": danh sách cột 2 sheet theo 6.3, dòng GV đọc theo cột mới, thêm người có cải tiến; "sau khi chốt kỳ": cột Tình trạng nay là cột 13; "PDF": thêm kiểm tra cột Cải tiến sáng tạo.
+
+## v1.6 – Bước 9: Theo dõi kết quả đã chốt + quyền file (mục 8) ✅
+
+**Đã làm**
+- Menu (`src/lib/menu.ts`): HP có **"Theo dõi kết quả đã chốt"** ngay sau "Chốt task trưởng bộ môn"; HT ngay sau "Duyệt & chốt hiệu phó". Đường dẫn chung `/theo-doi` (một bộ route cho cả hai vai trò).
+- Phạm vi khai báo một chỗ: `PHAM_VI_THEO_DOI` (`src/lib/kpi/chuoi.ts`) + hàm thuần `phamViTheoDoi` (`src/lib/co-cau.ts`): HP → GV, TBM thuộc các khoa mình phụ trách; HT → GV, TBM, TK, HP toàn trường. Chỉ task `DA_CHOT` (task bắt buộc và cải tiến; Mở rộng bỏ qua).
+- `src/lib/services/theo-doi.ts`: ô đếm theo chức vụ; bộ lọc kỳ (mặc định kỳ hiện tại), khoa, bộ môn, chức vụ, người, loại (Nhiệm vụ / Cải tiến sáng tạo); bảng Họ tên · Chức vụ · Đơn vị · Nhiệm vụ · Task · Người duyệt (bài nộp đã duyệt gần nhất) · Người chốt · Ngày chốt (từ task) · Xem; mới chốt nhất trước; **50 dòng/trang**.
+- `/theo-doi/task/[kpiTaskId]`: chi tiết **chỉ đọc** (minh chứng: PDF/ảnh xem ngay, Word/Excel tải về; ghi chú, link; lịch sử duyệt/chốt/nhận xét). Ngoài phạm vi hoặc chưa chốt → 404.
+- Quyền: trang chỉ cho HP, HT (`yeuCauVaiTro`); vai trò khác gõ thẳng đường dẫn → trang "Không có quyền". Trang không có server action nào; thao tác ghi trên task đã chốt vẫn bị `thucHienTask` chặn.
+- Quyền file (`quyen-file.ts`): minh chứng của task `DA_CHOT` mở thêm cho người có chủ task trong `phamViTheoDoi` (HP: GV/TBM khoa mình; HT: mọi người làm KPI). Task chưa chốt giữ luật cũ.
+- Không gửi thông báo.
+- Test: unit `co-cau.test.ts` +3 (phạm vi HP một khoa / HT / vai trò khác); tích hợp `tests/theo-doi.int.test.ts` 7 (phạm vi HP không thấy TK/HP/khoa khác/chưa chốt, HT cả 4 chức vụ kể cả khoa khác, 58 dòng → 50 + 8, từng bộ lọc, chi tiết ngoài phạm vi → null, HP/HT không hủy/trả về/chốt lại được, quyền file); E2E `e2e/v16-09-theo-doi.spec.ts` 6/6 (dữ liệu qua giao diện thật, menu, phạm vi, lọc, xem chi tiết + mở minh chứng, chặn GV/TBM/TK).
+
+**Tự chọn**
+- Ô đếm tính trên cả phạm vi của kỳ (không theo bộ lọc) để luôn thấy tổng quan theo chức vụ.
+- Lọc bộ môn: chỉ GV/TBM thuộc bộ môn (TK, HP không gắn bộ môn). Đổi khoa thì bỏ lọc bộ môn và người.
+- Trang admin tiến độ một người: dòng "Task vượt (đã chốt)" đổi thành "Cải tiến sáng tạo: <trạng thái>".

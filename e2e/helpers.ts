@@ -90,3 +90,32 @@ export async function thaoTacDuyetUi(page: Page, nguoiDuyet: string, nguoiLam: s
   await page.getByRole("dialog").getByRole("button", { name: "Xác nhận" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 }
+
+/**
+ * v1.6: danh sách đăng ký Chờ duyệt gồm MỌI nhiệm vụ thường của vị trí (+ nhiệm vụ cải tiến nếu caiTien), dựng bằng
+ * SQL để test không phụ thuộc giao diện Đầu kỳ (đã có test riêng: e2e/v16-05-dau-ky.spec.ts).
+ */
+export async function dangKyChoDuyetSql(username: string, caiTien = false) {
+  await sql(
+    `WITH u AS (SELECT id, role::text AS role FROM "User" WHERE username = $1),
+          k AS (SELECT id FROM "Ky" ORDER BY "createdAt" LIMIT 1),
+          nv AS (SELECT nv.id, nv.diem FROM "NhiemVu" nv, k, u
+                 WHERE nv."kyId" = k.id AND nv."doiTuong"::text = u.role AND (NOT nv."laCaiTien" OR $2)),
+          dk AS (INSERT INTO "DangKy" (id, "kyId", "userId", "trangThai", "tongDiem", "xepLoai", "nopLuc")
+                 SELECT gen_random_uuid()::text, k.id, u.id, 'CHO_DUYET', (SELECT sum(diem) FROM nv), 'A1', now() FROM k, u RETURNING id)
+     INSERT INTO "DangKyNhiemVu" ("dangKyId", "nhiemVuId") SELECT dk.id, nv.id FROM dk, nv`,
+    [username, caiTien],
+  );
+}
+
+/** Người chốt mở task trên màn hình Chốt và bấm một nút (Chốt / Trả về). */
+export async function thaoTacChotUi(page: Page, nguoiChot: string, task: string, nut: string, nhanXet?: string) {
+  await dangNhap(page, nguoiChot);
+  await page.goto("/chot");
+  await page.locator(`tr[data-task="${task}"]`).getByRole("link").click();
+  await expect(page.getByTestId("chi-tiet-task")).toHaveAttribute("data-task", task);
+  await page.getByTestId("nut-thao-tac").getByRole("button", { name: nut }).click();
+  if (nhanXet !== undefined) await page.getByRole("dialog").getByRole("textbox").fill(nhanXet);
+  await page.getByRole("dialog").getByRole("button", { name: "Xác nhận" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+}

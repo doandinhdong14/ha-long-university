@@ -33,6 +33,15 @@ export function viTriDuocChot(role: Role): DoiTuong | null {
   return DOI_TUONGS.find((d) => CHUOI[d].chot === role && !CHUOI[d].gopDuyetChot) ?? null;
 }
 
+/**
+ * Phạm vi mục "Theo dõi kết quả đã chốt" (spec-v1.6 mục 8.2): HP thấy task đã chốt của GV, TBM thuộc các khoa mình
+ * phụ trách; HT thấy của GV, TBM, TK, HP toàn trường. Chỉ xem.
+ */
+export const PHAM_VI_THEO_DOI: Partial<Record<Role, DoiTuong[]>> = {
+  HP: ["GV", "TBM"],
+  HT: ["GV", "TBM", "TK", "HP"],
+};
+
 /** Các vị trí trong phạm vi Xuất báo cáo của vai trò (mục 6.3). */
 export const PHAM_VI_BAO_CAO: Partial<Record<Role, DoiTuong[]>> = {
   TBM: ["GV"],

@@ -9,6 +9,7 @@ import {
   nguoiToiChot,
   nguoiToiDuyet,
   phamViBaoCao,
+  phamViTheoDoi,
   tenDonVi,
   type CoCau,
   type NguoiCoCau,
@@ -196,5 +197,31 @@ describe("lọc theo đơn vị (nhiều khoa/bộ môn)", () => {
     expect(tenDonVi(u(cc, "hp1"), cc)).toBe("Khoa 1, Khoa 2");
     expect(tenDonVi(u(cc, "hp2"), cc)).toBe("Chưa phụ trách khoa nào");
     expect(tenDonVi(u(cc, "ht"), cc)).toBe("Toàn trường");
+  });
+});
+
+describe("phạm vi Theo dõi kết quả đã chốt (spec-v1.6 mục 8.2)", () => {
+  // Mỗi khoa một hiệu phó: hp1 → Khoa 1, hp2 → Khoa 2.
+  const cc: CoCau = {
+    ...coCauHaiKhoa(),
+    khoas: [
+      { id: "k1", ten: "Khoa 1", hieuPhoId: "hp1" },
+      { id: "k2", ten: "Khoa 2", hieuPhoId: "hp2" },
+    ],
+  };
+
+  it("HP: chỉ GV và TBM thuộc khoa mình phụ trách; không thấy TK, HP, khoa khác", () => {
+    expect(phamViTheoDoi(u(cc, "hp1"), cc).viTris).toEqual(["GV", "TBM"]);
+    expect(ids(phamViTheoDoi(u(cc, "hp1"), cc).nguoi)).toEqual(["gv1", "tbm1"]);
+    expect(ids(phamViTheoDoi(u(cc, "hp2"), cc).nguoi)).toEqual(["gv2", "tbm2"]);
+  });
+
+  it("HT: GV, TBM, TK, HP toàn trường", () => {
+    expect(phamViTheoDoi(u(cc, "ht"), cc).viTris).toEqual(["GV", "TBM", "TK", "HP"]);
+    expect(ids(phamViTheoDoi(u(cc, "ht"), cc).nguoi)).toEqual(["gv1", "gv2", "hp1", "hp2", "tbm1", "tbm2", "tk1", "tk2"]);
+  });
+
+  it("vai trò khác không có phạm vi", () => {
+    for (const id of ["gv1", "tbm1", "tk1"]) expect(phamViTheoDoi(u(cc, id), cc)).toEqual({ viTris: [], nguoi: [] });
   });
 });

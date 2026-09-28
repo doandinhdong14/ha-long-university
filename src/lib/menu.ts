@@ -1,4 +1,5 @@
 // Menu theo vai trò, theo bảng 2.1 của đặc tả; "Cuối kỳ" của đặc tả tách thành Trong kỳ + Cuối kỳ (NOTES.md).
+// v1.6 (spec-v1.6 mục 8.1): HP, HT có thêm "Theo dõi kết quả đã chốt".
 // Màn hình dùng chung (Đầu kỳ, Trong kỳ, Cuối kỳ, Duyệt, Chốt, Xuất báo cáo, Nhận giấy tờ) chỉ có một
 // đường dẫn; tên mục khác nhau theo vai trò.
 import type { Role } from "@/generated/prisma/enums";
@@ -14,6 +15,7 @@ const KPI: MucMenu[] = [
 ];
 const BAO_CAO: MucMenu = { href: "/bao-cao", nhan: "Xuất báo cáo" };
 const GIAY_TO: MucMenu = { href: "/giay-to", nhan: "Nhận giấy tờ" };
+const THEO_DOI: MucMenu = { href: "/theo-doi", nhan: "Theo dõi kết quả đã chốt" };
 
 export const MENU: Record<Role, MucMenu[]> = {
   ADMIN: [
@@ -35,12 +37,14 @@ export const MENU: Record<Role, MucMenu[]> = {
     ...KPI,
     { href: "/duyet", nhan: "Duyệt trưởng khoa" },
     { href: "/chot", nhan: "Chốt task trưởng bộ môn" },
+    THEO_DOI,
     BAO_CAO,
     GIAY_TO,
   ],
   HT: [
     { href: "/chot", nhan: "Chốt task trưởng khoa" },
     { href: "/duyet", nhan: "Duyệt & chốt hiệu phó" },
+    THEO_DOI,
     { href: "/quy-dinh", nhan: "Ban hành quy định" },
     BAO_CAO,
   ],
