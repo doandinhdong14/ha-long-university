@@ -9,9 +9,9 @@ let kyId: string;
 beforeAll(async () => {
   await resetDb();
   kyId = (await kyDau()).id;
-  await dangKyVaDuyet("gv.tranthibinh", 1); // 3 task bắt buộc
-  await dangKyVaDuyet("tbm.phamthibich", 1);
-  await dangKyVaDuyet("tk.levankhoa", 1);
+  await dangKyVaDuyet("gv.tranthibinh");
+  await dangKyVaDuyet("tbm.phamthibich");
+  await dangKyVaDuyet("tk.levankhoa");
 });
 
 async function kt(id: string) {
@@ -59,7 +59,9 @@ describe("vòng trạng thái đầy đủ task GV (mục 5.3)", () => {
     const sau = await kt(t1.id);
     expect(sau.nguoiChotId).toBe((await user("tk.levankhoa")).id);
     expect(sau.chotLuc).not.toBeNull();
-    expect(await phanTram("gv.tranthibinh")).toBe(33.33);
+    // v1.6: mọi nhiệm vụ bắt buộc → 1 trên tổng số task bắt buộc của GV.
+    const soBatBuoc = (await taskCua("gv.tranthibinh")).filter((t) => t.task.loai === "BAT_BUOC").length;
+    expect(await phanTram("gv.tranthibinh")).toBe(Math.round((1 / soBatBuoc) * 10000) / 100);
 
     // Chốt → thông báo người làm KPI và người duyệt.
     const gv = await user("gv.tranthibinh");

@@ -42,19 +42,19 @@ beforeAll(async () => {
 
 describe("kịch bản chính mục 15", () => {
   it("gv.nguyenvanan: 10 nhiệm vụ (100 điểm), ~50% task bắt buộc được chốt, còn lại chưa nộp", async () => {
-    await dangKyVaDuyet("gv.nguyenvanan", 10);
+    await dangKyVaDuyet("gv.nguyenvanan");
     const tasks = await taskCua("gv.nguyenvanan");
     expect(tasks).toHaveLength(22);
     await lamHet("gv.nguyenvanan", tasks.slice(0, 11).map((t) => t.id));
   });
 
   it("gv.tranthibinh: nhiệm vụ 1–3 (39 điểm), 100% bắt buộc được chốt", async () => {
-    await dangKyVaDuyet("gv.tranthibinh", 3);
+    await dangKyVaDuyet("gv.tranthibinh");
     await lamHet("gv.tranthibinh", (await taskCua("gv.tranthibinh")).map((t) => t.id));
   });
 
   it("gv.levancuong: nhiệm vụ 1–5 (59 điểm), 100% bắt buộc + 2 mở rộng được chốt (mở rộng thứ 3 chỉ duyệt)", async () => {
-    await dangKyVaDuyet("gv.levancuong", 5);
+    await dangKyVaDuyet("gv.levancuong");
     await lamHet("gv.levancuong", (await taskCua("gv.levancuong")).map((t) => t.id));
     const moRongs = await db.task.findMany({
       where: { loai: "MO_RONG", nhiemVu: { kyId, doiTuong: "GV", thuTu: { in: [1, 2, 3] } } },
@@ -77,17 +77,17 @@ describe("kịch bản chính mục 15", () => {
   });
 
   it("tbm.phamthibich: nhiệm vụ TBM 1–3 (55 điểm): TK duyệt → gửi → HP chốt", async () => {
-    await dangKyVaDuyet("tbm.phamthibich", 3);
+    await dangKyVaDuyet("tbm.phamthibich");
     await lamHet("tbm.phamthibich", (await taskCua("tbm.phamthibich")).map((t) => t.id));
   });
 
   it("tk.levankhoa: nhiệm vụ TK 1–4 (80 điểm): HP duyệt → gửi → HT chốt", async () => {
-    await dangKyVaDuyet("tk.levankhoa", 4);
+    await dangKyVaDuyet("tk.levankhoa");
     await lamHet("tk.levankhoa", (await taskCua("tk.levankhoa")).map((t) => t.id));
   });
 
   it("hp.tranthiphuong: nhiệm vụ HP 1–3 (60 điểm): HT duyệt → HT chốt (2 nút)", async () => {
-    await dangKyVaDuyet("hp.tranthiphuong", 3);
+    await dangKyVaDuyet("hp.tranthiphuong");
     await lamHet("hp.tranthiphuong", (await taskCua("hp.tranthiphuong")).map((t) => t.id));
   });
 
@@ -95,7 +95,7 @@ describe("kịch bản chính mục 15", () => {
     await dangNhapNhu("admin.quantri");
     expect((await taoTaiKhoan({ hoTen: "Người Treo", role: "GV" })).ok).toBe(true);
     expect((await taoTaiKhoan({ hoTen: "Không Đăng Ký", role: "GV" })).ok).toBe(true);
-    await dangKyVaDuyet("gv.nguoitreo", 1); // 3 task bắt buộc
+    await dangKyVaDuyet("gv.nguoitreo");
     const [a, b, c] = await taskCua("gv.nguoitreo");
     await lamTask("gv.nguoitreo", a.id, "DA_DUYET");
     await lamTask("gv.nguoitreo", b.id, "CHO_CHOT");
@@ -151,7 +151,7 @@ describe("kịch bản chính mục 15", () => {
     const [t] = (await taskCua("gv.nguyenvanan")).filter((x) => x.trangThai === "CHUA_LAM");
     await dangNhapNhu("gv.nguyenvanan");
     expect((await (await nop(t.id)).json()).error).toBe("Kỳ đã chốt, không thể thao tác.");
-    expect(await guiDangKy(kyId)).toMatchObject({ ok: false });
+    expect(await guiDangKy({ kyId, caiTien: false })).toMatchObject({ ok: false });
     const [c] = await taskCua("gv.nguoitreo");
     await dangNhapNhu("tbm.phamthibich");
     expect(await thaoTac(c.id, "GUI_CHOT")).toEqual({ ok: false, error: "Kỳ đã chốt, không thể thao tác." });
@@ -197,11 +197,11 @@ describe("nhắc việc (mục 11)", () => {
     await db.ky.update({ where: { id: kyId }, data: { createdAt: new Date("2020-01-01") } });
     await db.ky.update({ where: { id: ky3.id }, data: { createdAt: new Date("2019-01-01") } });
 
-    await dangKyVaDuyet("gv.tranthibinh", 1);
+    await dangKyVaDuyet("gv.tranthibinh");
     const [g1, g2] = await db.kpiTask.findMany({ where: { kyId: ky3.id, user: { username: "gv.tranthibinh" } }, orderBy: { id: "asc" } });
     await lamTask("gv.tranthibinh", g1.id, "DA_DUYET");
     await lamTask("gv.tranthibinh", g2.id, "CHO_CHOT");
-    await dangKyVaDuyet("hp.tranthiphuong", 1);
+    await dangKyVaDuyet("hp.tranthiphuong");
     const [h1] = await db.kpiTask.findMany({ where: { kyId: ky3.id, user: { username: "hp.tranthiphuong" } } });
     await lamTask("hp.tranthiphuong", h1.id, "DA_DUYET");
 

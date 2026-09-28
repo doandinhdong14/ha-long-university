@@ -75,6 +75,21 @@ describe("v1.6 – nhiệm vụ cải tiến sáng tạo (damBaoNhiemVuCaiTien)"
   });
 });
 
+describe("v1.6 – admin không sửa / xóa được nhiệm vụ cải tiến (mục 2.5, chặn ở API)", () => {
+  it("sửa, xóa nhiệm vụ; thêm, sửa, xóa task của nhiệm vụ cải tiến → bị chặn", async () => {
+    await dangNhapNhu("admin.quantri");
+    const nv = await db.nhiemVu.findFirstOrThrow({ where: { kyId: kySeedId, doiTuong: "GV", laCaiTien: true }, include: { tasks: true } });
+    const loi = { ok: false, error: "Nhiệm vụ cải tiến sáng tạo là nhiệm vụ hệ thống, không sửa hoặc xóa được." };
+    expect(await suaNhiemVu({ id: nv.id, ten: "Đổi tên", diem: 5 })).toEqual(loi);
+    expect(await xoaNhiemVu(nv.id)).toEqual(loi);
+    expect(await themTask({ nhiemVuId: nv.id, ten: "Task thêm" })).toEqual(loi);
+    expect(await suaTask({ id: nv.tasks[0].id, ten: "Đổi tên task" })).toEqual(loi);
+    expect(await xoaTask(nv.tasks[0].id)).toEqual(loi);
+    expect(await demCaiTien(kySeedId)).toEqual(MOT_CAI_TIEN_MOI_VI_TRI);
+    expect((await db.nhiemVu.findUniqueOrThrow({ where: { id: nv.id } })).ten).toBe("Đăng ký cải tiến sáng tạo");
+  });
+});
+
 describe("tạo, sao chép, công bố kỳ", () => {
   it("sao chép từ kỳ trước: đủ nhiệm vụ, task, bảng xếp loại cả 4 vị trí; kỳ mới chưa công bố", async () => {
     await dangNhapNhu("admin.quantri");

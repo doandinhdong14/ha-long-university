@@ -106,6 +106,9 @@ export async function congBoKy(kyId: string) {
 
 // ───────────────────────── Nhiệm vụ ─────────────────────────
 
+/** v1.6 (mục 2.5): nhiệm vụ cải tiến sáng tạo là nhiệm vụ hệ thống – không sửa, không xóa, không thêm task. */
+const LOI_NHIEM_VU_HE_THONG = "Nhiệm vụ cải tiến sáng tạo là nhiệm vụ hệ thống, không sửa hoặc xóa được.";
+
 const NhiemVu = z.object({
   ten: z.string().trim().min(1, "Vui lòng nhập tên nhiệm vụ.").max(200),
   moTa: z.string().trim().max(2000).optional().transform((s) => s || null),
@@ -132,6 +135,7 @@ export async function suaNhiemVu(input: { id: string } & z.input<typeof NhiemVu>
     await db.$transaction(async (tx) => {
       const nv = await tx.nhiemVu.findUnique({ where: { id: input.id } });
       if (!nv) throw new LoiNghiepVu("Nhiệm vụ không tồn tại.", 404);
+      if (nv.laCaiTien) throw new LoiNghiepVu(LOI_NHIEM_VU_HE_THONG, 409);
       await layKyChuaChot(tx, nv.kyId);
       if (nv.diem !== d.diem && (await soDangKyCuaNhiemVu(tx, nv.id)) > 0) {
         throw new LoiNghiepVu("Nhiệm vụ đã có người đăng ký, không thể sửa điểm (chỉ sửa được chữ).", 409);
@@ -147,6 +151,7 @@ export async function xoaNhiemVu(id: string) {
     await db.$transaction(async (tx) => {
       const nv = await tx.nhiemVu.findUnique({ where: { id }, include: { tasks: { select: { id: true } } } });
       if (!nv) throw new LoiNghiepVu("Nhiệm vụ không tồn tại.", 404);
+      if (nv.laCaiTien) throw new LoiNghiepVu(LOI_NHIEM_VU_HE_THONG, 409);
       await layKyChuaChot(tx, nv.kyId);
       if ((await soDangKyCuaNhiemVu(tx, nv.id)) > 0) {
         throw new LoiNghiepVu("Nhiệm vụ đã có người đăng ký, không thể xóa.", 409);
@@ -177,6 +182,7 @@ export async function themTask(input: { nhiemVuId: string } & z.input<typeof Tas
     await db.$transaction(async (tx) => {
       const nv = await tx.nhiemVu.findUnique({ where: { id: input.nhiemVuId } });
       if (!nv) throw new LoiNghiepVu("Nhiệm vụ không tồn tại.", 404);
+      if (nv.laCaiTien) throw new LoiNghiepVu(LOI_NHIEM_VU_HE_THONG, 409);
       await layKyChuaChot(tx, nv.kyId);
       if (await nhiemVuDaCoDangKyDuyet(tx, nv.id)) throw new LoiNghiepVu(LOI_THEM_BAT_BUOC, 409);
       await tx.task.create({ data: { ...d, loai: "BAT_BUOC", nhiemVuId: nv.id } });
@@ -191,6 +197,7 @@ export async function suaTask(input: { id: string } & z.input<typeof Task>) {
     await db.$transaction(async (tx) => {
       const t = await tx.task.findUnique({ where: { id: input.id }, include: { nhiemVu: true } });
       if (!t) throw new LoiNghiepVu("Task không tồn tại.", 404);
+      if (t.nhiemVu.laCaiTien) throw new LoiNghiepVu(LOI_NHIEM_VU_HE_THONG, 409);
       await layKyChuaChot(tx, t.nhiemVu.kyId);
       await tx.task.update({ where: { id: t.id }, data: d });
     });
@@ -203,6 +210,7 @@ export async function xoaTask(id: string) {
     await db.$transaction(async (tx) => {
       const t = await tx.task.findUnique({ where: { id }, include: { nhiemVu: true } });
       if (!t) throw new LoiNghiepVu("Task không tồn tại.", 404);
+      if (t.nhiemVu.laCaiTien) throw new LoiNghiepVu(LOI_NHIEM_VU_HE_THONG, 409);
       await layKyChuaChot(tx, t.nhiemVu.kyId);
       if (await taskDaCoNguoiLam(tx, t.id)) throw new LoiNghiepVu("Task đã có người làm hoặc xin làm, không thể xóa.", 409);
       await tx.task.delete({ where: { id: t.id } });

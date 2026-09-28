@@ -42,12 +42,12 @@ async function chuPdf(buf: ArrayBuffer): Promise<string> {
 beforeAll(async () => {
   await resetDb();
   kyId = (await kyDau()).id;
-  await dangKyVaDuyet("gv.tranthibinh", 1);
+  await dangKyVaDuyet("gv.tranthibinh");
   const [t1] = await taskCua("gv.tranthibinh");
   await lamTask("gv.tranthibinh", t1.id, "DA_CHOT");
-  await dangKyVaDuyet("tbm.phamthibich", 1);
-  await dangKyVaDuyet("tk.levankhoa", 1);
-  await dangKyVaDuyet("hp.tranthiphuong", 1);
+  await dangKyVaDuyet("tbm.phamthibich");
+  await dangKyVaDuyet("tk.levankhoa");
+  await dangKyVaDuyet("hp.tranthiphuong");
 });
 
 describe("phạm vi xuất báo cáo theo vai trò (mục 6.3)", () => {
@@ -106,8 +106,10 @@ describe("nội dung Excel", () => {
     kq.eachRow((row) => {
       if (row.getCell(2).value === "Trần Thị Bình") binh = (row.values as unknown[]).slice(1);
     });
-    // 1/3 task bắt buộc đã chốt; 1 nhiệm vụ 15 điểm → xếp loại F.
-    expect(binh.slice(2, 7)).toEqual(["Giáo viên", "Bộ môn Khoa học máy tính", "33,3%", "Không đạt", "F"]);
+    // v1.6: đăng ký đủ 10 nhiệm vụ (100 điểm) → A1; 1/22 task bắt buộc đã chốt → Không đạt.
+    expect(binh.slice(2, 4)).toEqual(["Giáo viên", "Bộ môn Khoa học máy tính"]);
+    expect(binh[4]).toMatch(/^[0-9]+([,.][0-9])?%$/);
+    expect(binh.slice(5, 7)).toEqual(["Không đạt", "A1"]);
     expect(binh[10]).toBe("Tạm tính");
     const ct = wb.getWorksheet("Chi tiết task")!;
     const dongChot: unknown[][] = [];

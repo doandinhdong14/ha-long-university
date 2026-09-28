@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Lightbulb, Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import type { DoiTuong, LoaiTask } from "@/generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,12 +47,17 @@ export function DanhSachNhiemVu({
   nhiemVus,
   tongDiem,
   khoa,
+  daCongBo,
+  caiTien,
 }: {
   kyId: string;
   doiTuong: DoiTuong;
   nhiemVus: NhiemVuHienThi[];
   tongDiem: number;
   khoa: boolean;
+  daCongBo: boolean;
+  /** Nhiệm vụ hệ thống "Đăng ký cải tiến sáng tạo" của vị trí (v1.6). */
+  caiTien: { soDangKy: number; tasks: string[] } | null;
 }) {
   return (
     <div className="space-y-4">
@@ -60,13 +65,45 @@ export function DanhSachNhiemVu({
         <p className="text-sm text-muted-foreground">
           {nhiemVus.length} nhiệm vụ · tổng điểm tất cả nhiệm vụ: <strong className="text-foreground">{tongDiem}</strong>
         </p>
-        {!khoa && <DialogNhiemVu kyId={kyId} doiTuong={doiTuong} thuTuMoi={nhiemVus.length + 1} />}
+        {!khoa && <DialogNhiemVu kyId={kyId} doiTuong={doiTuong} thuTuMoi={nhiemVus.length + 1} daCongBo={daCongBo} />}
       </div>
       {nhiemVus.length === 0 && <p className="py-8 text-center text-muted-foreground">Chưa có nhiệm vụ nào.</p>}
       {nhiemVus.map((nv) => (
         <TheNhiemVu key={nv.id} nv={nv} khoa={khoa} />
       ))}
+      {caiTien && <TheCaiTien caiTien={caiTien} />}
     </div>
+  );
+}
+
+/** Dòng cố định của nhiệm vụ hệ thống: không sửa, không xóa (chặn cả ở API). */
+function TheCaiTien({ caiTien }: { caiTien: { soDangKy: number; tasks: string[] } }) {
+  return (
+    <Card data-nhiem-vu-he-thong="cai-tien" className="border-dashed bg-muted/30">
+      <CardHeader className="space-y-1">
+        <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+          <Lightbulb className="size-4 text-amber-500" /> Đăng ký cải tiến sáng tạo (hệ thống)
+          <Badge variant="secondary">
+            <Lock className="size-3" /> Không sửa, không xóa
+          </Badge>
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Tự có ở mọi kỳ, mọi vị trí. Người làm KPI tự chọn có đăng ký hay không ở Đầu kỳ; task cải tiến được chốt: +10% (tối
+          đa 110%), không cộng điểm đăng ký.
+          {caiTien.soDangKy > 0 && ` · ${caiTien.soDangKy} người đã đăng ký`}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <ul className="divide-y rounded-md border bg-background">
+          {caiTien.tasks.map((t) => (
+            <li key={t} className="flex items-center gap-2 px-3 py-2 text-sm">
+              <Badge variant="outline">Cải tiến sáng tạo</Badge>
+              <span className="font-medium">{t}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -162,8 +199,8 @@ function DongTask({ t, nv, khoa }: { t: TaskHienThi; nv: NhiemVuHienThi; khoa: b
 
 function DialogNhiemVu(
   props:
-    | { kyId: string; doiTuong: DoiTuong; thuTuMoi: number; nv?: undefined }
-    | { nv: NhiemVuHienThi; kyId?: undefined; doiTuong?: undefined; thuTuMoi?: undefined },
+    | { kyId: string; doiTuong: DoiTuong; thuTuMoi: number; daCongBo: boolean; nv?: undefined }
+    | { nv: NhiemVuHienThi; kyId?: undefined; doiTuong?: undefined; thuTuMoi?: undefined; daCongBo?: undefined },
 ) {
   const [open, setOpen] = useState(false);
   const { pending, chay } = useHanhDong();
@@ -203,6 +240,12 @@ function DialogNhiemVu(
           <DialogHeader>
             <DialogTitle>{nv ? "Sửa nhiệm vụ" : "Thêm nhiệm vụ"}</DialogTitle>
           </DialogHeader>
+          {!nv && props.daCongBo && (
+            <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm dark:bg-amber-950/30" data-testid="canh-bao-da-cong-bo">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+              <p>Người đã gửi đăng ký sẽ không tự có nhiệm vụ này. Nên hoàn tất nhiệm vụ trước khi công bố kỳ.</p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="nv-ten">Tên nhiệm vụ</Label>
             <Input id="nv-ten" name="ten" defaultValue={nv?.ten} required maxLength={200} />

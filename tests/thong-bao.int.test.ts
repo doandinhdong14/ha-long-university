@@ -1,7 +1,7 @@
 // Thông báo trong web (mục 11): đúng người nhận cho từng sự kiện; chuông chỉ thấy thông báo của mình.
 import { beforeAll, describe, expect, it } from "vitest";
 import { xinThemTask } from "@/app/(app)/trong-ky/actions";
-import { chonNhiemVu, guiDangKy } from "@/app/(app)/dau-ky/actions";
+import { guiDangKy } from "@/app/(app)/dau-ky/actions";
 import { duyetDangKy, duyetYeuCau } from "@/app/(app)/duyet/actions";
 import { GET as apiThongBao } from "@/app/api/thong-bao/route";
 import { docTatCaThongBao, docThongBao } from "@/components/layout/thong-bao-actions";
@@ -24,9 +24,7 @@ beforeAll(async () => {
 describe("bảng sự kiện mục 11 – chuỗi GV → TBM → TK", () => {
   it("gửi đăng ký → người duyệt; đăng ký được duyệt → người làm KPI", async () => {
     await dangNhapNhu("gv.tranthibinh");
-    const nv = await db.nhiemVu.findFirstOrThrow({ where: { kyId, doiTuong: "GV", thuTu: 1 } });
-    await chonNhiemVu({ kyId, nhiemVuId: nv.id, chon: true });
-    await guiDangKy(kyId);
+    await guiDangKy({ kyId, caiTien: false });
     expect((await tinMoiNhat("tbm.phamthibich"))?.noiDung).toMatch(/Trần Thị Bình đã gửi danh sách đăng ký/);
     expect(await tinMoiNhat("tk.levankhoa")).toBeNull(); // danh sách chỉ lên người duyệt
 

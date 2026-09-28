@@ -14,6 +14,9 @@ type Tx = Prisma.TransactionClient;
 export const LOAI_TASK_DANG_DUNG: LoaiTask[] = ["BAT_BUOC", "CAI_TIEN"];
 export const TASK_DANG_DUNG = { loai: { in: LOAI_TASK_DANG_DUNG } };
 
+/** Đường dẫn tải file mẫu Phụ lục IV (file thật: public/templates/phu-luc-iv.docx – mục 2.2). */
+export const DUONG_DAN_PHU_LUC_IV = "/templates/phu-luc-iv.docx";
+
 /** Phần trăm cộng thêm khi task cải tiến được chốt (mục 4.1). */
 export const THUONG_CAI_TIEN = 10;
 

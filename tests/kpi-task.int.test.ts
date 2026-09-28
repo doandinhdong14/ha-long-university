@@ -24,10 +24,10 @@ let kyId: string;
 beforeAll(async () => {
   await resetDb();
   kyId = (await kyDau()).id;
-  await dangKyVaDuyet("gv.nguyenvanan", 3);
-  await dangKyVaDuyet("tbm.phamthibich", 3);
-  await dangKyVaDuyet("tk.levankhoa", 4);
-  await dangKyVaDuyet("hp.tranthiphuong", 3);
+  await dangKyVaDuyet("gv.nguyenvanan");
+  await dangKyVaDuyet("tbm.phamthibich");
+  await dangKyVaDuyet("tk.levankhoa");
+  await dangKyVaDuyet("hp.tranthiphuong");
 });
 
 async function trangThai(kpiTaskId: string) {

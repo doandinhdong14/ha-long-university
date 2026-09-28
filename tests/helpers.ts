@@ -1,12 +1,11 @@
 import { execSync } from "node:child_process";
 import { db } from "@/lib/db";
-import { chonNhiemVu, guiDangKy } from "@/app/(app)/dau-ky/actions";
+import { guiDangKy } from "@/app/(app)/dau-ky/actions";
 import { duyetDangKy } from "@/app/(app)/duyet/actions";
 import { thaoTacTask } from "@/components/kpi/actions";
 import { POST as apiNop } from "@/app/api/kpi-task/[id]/bai-nop/route";
 import { PATCH as apiSua } from "@/app/api/bai-nop/[id]/route";
 import { GET as apiFile } from "@/app/api/files/[id]/route";
-import type { DoiTuong } from "@/generated/prisma/enums";
 import { nguoiChot, nguoiDuyet } from "@/lib/co-cau";
 import { taiCoCau } from "@/lib/services/co-cau";
 
@@ -53,16 +52,14 @@ export async function nguoiChotCua(username: string) {
   return nguoiChot(cc.users.find((x) => x.username === username)!, cc)!.username;
 }
 
-/** Người làm KPI tick n nhiệm vụ đầu của vị trí mình, gửi; người duyệt duyệt. */
-export async function dangKyVaDuyet(username: string, n: number) {
+/**
+ * Người làm KPI gửi đăng ký (v1.6: mọi nhiệm vụ của vị trí đều bắt buộc, chỉ chọn có cải tiến hay không);
+ * người duyệt duyệt.
+ */
+export async function dangKyVaDuyet(username: string, opts: { caiTien?: boolean } = {}) {
   const ky = await kyDau();
   const u = await dangNhapNhu(username);
-  const nvs = await db.nhiemVu.findMany({ where: { kyId: ky.id, doiTuong: u.role as DoiTuong }, orderBy: { thuTu: "asc" } });
-  for (const nv of nvs.slice(0, n)) {
-    const r = await chonNhiemVu({ kyId: ky.id, nhiemVuId: nv.id, chon: true });
-    if (!r.ok) throw new Error(r.error);
-  }
-  const g = await guiDangKy(ky.id);
+  const g = await guiDangKy({ kyId: ky.id, caiTien: opts.caiTien ?? false });
   if (!g.ok) throw new Error(g.error);
   const dk = await db.dangKy.findUniqueOrThrow({ where: { kyId_userId: { kyId: ky.id, userId: u.id } } });
   await dangNhapNhu(await nguoiDuyetCua(username));

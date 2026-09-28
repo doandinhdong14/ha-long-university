@@ -35,7 +35,7 @@ export async function TabDangKy({ ky, cc }: { ky: Ky; cc: CoCau }) {
   const ds = nguoiLamKpi(cc);
   const dks = await db.dangKy.findMany({
     where: { kyId: ky.id, userId: { in: ds.map((u) => u.id) } },
-    include: { _count: { select: { nhiemVus: true } } },
+    include: { _count: { select: { nhiemVus: { where: { nhiemVu: { laCaiTien: false } } } } } },
   });
   const ten = (id: string | null) => (id ? (cc.users.find((u) => u.id === id)?.hoTen ?? "(tài khoản đã xóa)") : "—");
   return (

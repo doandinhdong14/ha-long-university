@@ -38,7 +38,7 @@ async function demCauHinh() {
 beforeAll(async () => {
   await resetDb();
   kyId = (await kyDau()).id;
-  await dangKyVaDuyet("gv.nguyenvanan", 1);
+  await dangKyVaDuyet("gv.nguyenvanan");
   const [t1] = await taskCua("gv.nguyenvanan");
   await lamTask("gv.nguyenvanan", t1.id, "DA_CHOT");
 
@@ -83,7 +83,7 @@ describe("Admin reset dữ liệu", () => {
   });
 
   it("sau reset làm lại KPI được ngay; tài khoản vẫn đăng nhập như cũ", async () => {
-    await dangKyVaDuyet("gv.nguyenvanan", 1);
+    await dangKyVaDuyet("gv.nguyenvanan");
     const [t1] = await taskCua("gv.nguyenvanan");
     await lamTask("gv.nguyenvanan", t1.id, "DA_CHOT");
     expect(await db.kpiTask.findUniqueOrThrow({ where: { id: t1.id } })).toMatchObject({ trangThai: "DA_CHOT" });

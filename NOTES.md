@@ -474,3 +474,26 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 - `tests/thong-bao.int.test.ts` › "xin thêm task → người duyệt…": thành "không còn thông báo xin thêm".
 - `tests/phan-viec.int.test.ts` › "khóa sửa/xóa…": không còn đổi loại task (gửi tay `loai` bị bỏ qua), đăng ký đã duyệt thì không thêm task được; thêm test "task mới luôn Bắt buộc kể cả khi request gửi Mở rộng".
 - `tests/kich-ban-15.int.test.ts` (kịch bản v1.4 có task Mở rộng) viết lại theo kịch bản mục 12.1 ở bước 6.
+
+## v1.6 – Bước 5: Đầu kỳ mới + Phụ lục IV + admin Phân việc (mục 2) ✅
+
+**Đã làm**
+- **Server tự quyết danh sách** (`src/lib/services/dang-ky.ts`): bỏ `chonNhiemVu`; `luuDangKy` (tự lưu khi tick cải tiến) và `guiDangKy` chỉ nhận `{ kyId, caiTien }` (zod, trường thừa bị bỏ qua) và luôn ghi **toàn bộ** nhiệm vụ thường của vị trí vào `DangKyNhiemVu` (xóa nhiệm vụ lạ, kể cả nhiệm vụ vị trí khác) + nhiệm vụ cải tiến nếu có tick. Tick được khi Nháp (trước hạn đăng ký) hoặc Bị từ chối (trước deadline) — cùng luật `lyDoKhongSuaDangKy`. Vị trí không có nhiệm vụ → "Chưa có nhiệm vụ cho vị trí này, vui lòng liên hệ admin." và không gửi được. Xếp loại giữ cách tính (tổng điểm nhiệm vụ thường); cải tiến 0 điểm.
+- **Duyệt danh sách** giao task Bắt buộc của nhiệm vụ thường + 1 task `CAI_TIEN` nếu có đăng ký; không giao task Mở rộng. Thông báo gửi đăng ký ghi thêm "có đăng ký cải tiến sáng tạo".
+- **Trang Đầu kỳ** (`/dau-ky`): thẻ nhiệm vụ tick sẵn, khóa, nhãn "Bắt buộc" (icon khóa), chỉ hiện task Bắt buộc; khối **"Đăng ký cải tiến sáng tạo (không bắt buộc)"** dưới danh sách, trên nút Gửi: thẻ file Phụ lục IV + nút Tải về, ô tick "Tôi đăng ký thực hiện cải tiến sáng tạo trong kỳ này", ghi chú +10% / tối đa 110% / không ảnh hưởng xếp loại. Thanh tổng kết: Số nhiệm vụ – Tổng điểm – Xếp loại dự kiến – **Cải tiến sáng tạo: Có/Không**. Đã gửi (Chờ duyệt/Đã duyệt) thì hiện đúng danh sách đã gửi.
+- **Phụ lục IV**: `public/templates/` (có `.gitkeep`, **không** tạo file docx giả). `coPhuLucIV()` kiểm tra file ở server mỗi lần hiển thị; chưa có → "Mẫu Phụ lục IV đang được cập nhật", nút Tải về khóa, ô tick vẫn dùng được.
+- **Màn hình Duyệt – tab Đăng ký nhiệm vụ**: dòng "Đăng ký cải tiến sáng tạo: Có/Không"; số nhiệm vụ và danh sách chỉ gồm nhiệm vụ thường, task Bắt buộc.
+- **Admin Phân việc**: mỗi vị trí có dòng cố định **"Đăng ký cải tiến sáng tạo (hệ thống)"** (không có nút sửa/xóa); API chặn sửa/xóa nhiệm vụ cải tiến và thêm/sửa/xóa task của nó ("Nhiệm vụ cải tiến sáng tạo là nhiệm vụ hệ thống, không sửa hoặc xóa được."). Thêm nhiệm vụ khi kỳ đã công bố → cảnh báo "Người đã gửi đăng ký sẽ không tự có nhiệm vụ này. Nên hoàn tất nhiệm vụ trước khi công bố kỳ.". Xem cấu hình: số nhiệm vụ không tính nhiệm vụ cải tiến.
+- Test: `tests/dang-ky.int.test.ts` viết lại (xem dưới); `tests/phan-viec.int.test.ts` thêm test chặn API nhiệm vụ cải tiến; E2E `e2e/v16-05-dau-ky.spec.ts` 5/5 (tick sẵn + khóa + nhãn; chưa có file → khóa Tải về nhưng tick được, tự lưu; chép file → tải được; gửi → khóa ô cải tiến, người duyệt thấy dòng "Có", không còn tab/ô xin thêm; admin: dòng hệ thống, form task không có ô Loại, cảnh báo kỳ đã công bố).
+
+**Tự chọn**
+- `next start` **không** phục vụ file thêm vào `public/` sau khi build (đã thử: 404). Để "chép file vào là tải được" đúng như mục 12.3 mà không phải build lại, thêm route `src/app/templates/phu-luc-iv.docx/route.ts` đọc file lúc request (đường dẫn vẫn là `/templates/phu-luc-iv.docx`). Đã thử build khi file thật có sẵn trong `public/templates/`: build vẫn thành công. Người chưa đăng nhập bị proxy chuyển về trang đăng nhập.
+- Thông báo thành công khi gửi ghi điểm + xếp loại như cũ; hộp xác nhận ghi thêm "Cải tiến sáng tạo: Có/Không".
+- Người duyệt duyệt đúng danh sách đã gửi (không tự bổ sung nhiệm vụ admin thêm sau) — đúng với cảnh báo mục 2.5.
+
+**Test cũ sửa theo hành vi mới**
+- `tests/dang-ky.int.test.ts`: viết lại theo v1.6 — 4 vị trí gửi (đủ nhiệm vụ, 100 điểm, A1, có/không cải tiến) → đúng người duyệt, giao task Bắt buộc + Cải tiến; server bỏ qua danh sách sửa tay; tick cải tiến khi Nháp, khóa khi Chờ duyệt/Đã duyệt; giá trị sai; vị trí chưa có nhiệm vụ; HT/Admin; hết hạn đăng ký; bị từ chối → sửa + gửi lại; kỳ đã chốt; A3. (Thay cho các test "tick từng nhiệm vụ", "phải chọn ≥1 nhiệm vụ", "chỉ tick nhiệm vụ đúng vị trí".)
+- `tests/helpers.ts` › `dangKyVaDuyet(username, { caiTien })`: không còn tham số số nhiệm vụ; các file gọi (`bao-cao`, `chot`, `kpi-task`, `reset`, `kich-ban-15`) bỏ tham số này.
+- `tests/thong-bao.int.test.ts` › gửi đăng ký: gọi `guiDangKy({ kyId, caiTien })`.
+- `tests/chot.int.test.ts` › "% chỉ tăng khi chốt": % tính theo số task bắt buộc thực tế (đăng ký đủ 10 nhiệm vụ) thay vì 33,33.
+- `tests/bao-cao.int.test.ts` › "nội dung Excel": dòng của GV nay là A1 (100 điểm), % theo số task thực tế.

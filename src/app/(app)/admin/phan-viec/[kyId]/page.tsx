@@ -45,7 +45,7 @@ export default async function TrangChiTietKy(props: PageProps<"/admin/phan-viec/
   });
   if (!ky) notFound();
 
-  const [demNv, demBac, duyet, lyDoCongBo] = await Promise.all([
+  const [demNv, demBac, duyet, lyDoCongBo, caiTien] = await Promise.all([
     db.nhiemVu.groupBy({ by: ["doiTuong"], where: { kyId, laCaiTien: false }, _count: true }),
     db.bacXepLoai.groupBy({ by: ["doiTuong"], where: { kyId }, _count: true }),
     db.dangKyNhiemVu.groupBy({
@@ -54,6 +54,10 @@ export default async function TrangChiTietKy(props: PageProps<"/admin/phan-viec/
       _count: true,
     }),
     ky.daCongBo ? null : lyDoChuaCongBoDuoc(db, kyId),
+    db.nhiemVu.findFirst({
+      where: { kyId, doiTuong: viTri, laCaiTien: true },
+      include: { tasks: { select: { ten: true } }, _count: { select: { dangKys: true } } },
+    }),
   ]);
   const soDuyet = new Map(duyet.map((d) => [d.nhiemVuId, d._count]));
 
@@ -125,7 +129,15 @@ export default async function TrangChiTietKy(props: PageProps<"/admin/phan-viec/
           <TabsTrigger value="xep-loai">Bảng xếp loại ({ky.bacXepLoais.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="nhiem-vu" className="mt-4">
-          <DanhSachNhiemVu kyId={ky.id} doiTuong={viTri} nhiemVus={nhiemVus} tongDiem={tongDiem} khoa={ky.daChot} />
+          <DanhSachNhiemVu
+            kyId={ky.id}
+            doiTuong={viTri}
+            nhiemVus={nhiemVus}
+            tongDiem={tongDiem}
+            khoa={ky.daChot}
+            daCongBo={ky.daCongBo}
+            caiTien={caiTien ? { soDangKy: caiTien._count.dangKys, tasks: caiTien.tasks.map((t) => t.ten) } : null}
+          />
         </TabsContent>
         <TabsContent value="xep-loai" className="mt-4">
           <BangXepLoai
