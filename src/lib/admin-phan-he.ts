@@ -46,7 +46,7 @@ export const PHAN_HE_ADMIN: NhomPhanHe[] = [
     mucCon: [
       { so: "2.1", slug: "ngan-hang-san-pham-kpi", ten: "Ngân hàng sản phẩm KPI (Giảng dạy, NCKH, Phục vụ cộng đồng…)", moTa: "Danh mục nhiệm vụ, sản phẩm KPI theo từng nhóm.", trangThai: "MOT_PHAN", lienKet: "PHAN_VIEC_DAU_KY", ghiChu: "Hiện đã có danh mục nhiệm vụ theo từng vị trí." },
       { so: "2.2", slug: "diem-chuan-minh-chung", ten: "Quy định điểm chuẩn & yêu cầu minh chứng", moTa: "Điểm của từng sản phẩm KPI và yêu cầu minh chứng đi kèm.", trangThai: "MOT_PHAN", lienKet: "PHAN_VIEC_DAU_KY", ghiChu: "Hiện đã có điểm nhiệm vụ và nộp minh chứng theo từng task." },
-      { so: "2.3", slug: "quy-doi-sang-kien", ten: "Quy đổi sáng kiến / cải tiến / đề tài", moTa: "Bảng quy đổi sáng kiến, cải tiến, đề tài sang điểm KPI.", trangThai: "PHAT_TRIEN" },
+      { so: "2.3", slug: "quy-doi-sang-kien", ten: "Quy đổi sáng kiến / cải tiến / đề tài", moTa: "Bảng quy đổi sáng kiến, cải tiến, đề tài sang điểm KPI.", trangThai: "MOT_PHAN", ghiChu: "Hiện đã có Đăng ký cải tiến sáng tạo (+10%) theo mẫu Phụ lục IV. Quy đổi sang điểm sẽ bổ sung ở giai đoạn sau." },
       { so: "2.4", slug: "vi-pham-thai-do", ten: "Danh mục vi phạm thái độ / kỷ luật", moTa: "Danh mục các lỗi thái độ, kỷ luật và mức độ.", trangThai: "PHAT_TRIEN" },
       { so: "2.5", slug: "ty-trong-diem", ten: "Cấu hình tỷ trọng điểm theo khối & chức vụ", moTa: "Tỷ trọng điểm khác nhau theo khối công tác và chức vụ.", trangThai: "PHAT_TRIEN" },
       { so: "2.6", slug: "lam-tron-diem", ten: "Quy tắc làm tròn điểm tự động", moTa: "Quy tắc làm tròn điểm khi tính kết quả.", trangThai: "PHAT_TRIEN" },

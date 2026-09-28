@@ -569,3 +569,7 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 - Ô đếm tính trên cả phạm vi của kỳ (không theo bộ lọc) để luôn thấy tổng quan theo chức vụ.
 - Lọc bộ môn: chỉ GV/TBM thuộc bộ môn (TK, HP không gắn bộ môn). Đổi khoa thì bỏ lọc bộ môn và người.
 - Trang admin tiến độ một người: dòng "Task vượt (đã chốt)" đổi thành "Cải tiến sáng tạo: <trạng thái>".
+
+## v1.6 – Bước 10: Cập nhật config menu Admin "Phân hệ mở rộng" v1.5 (mục 10) ✅
+
+- Đã có v1.5 (`src/lib/admin-phan-he.ts`). Mục **2.3 Quy đổi sáng kiến / cải tiến / đề tài**: `trangThai: "MOT_PHAN"`, `ghiChu: "Hiện đã có Đăng ký cải tiến sáng tạo (+10%) theo mẫu Phụ lục IV. Quy đổi sang điểm sẽ bổ sung ở giai đoạn sau."`. Không thêm liên kết (mục 10 chỉ nêu 2 trường).
