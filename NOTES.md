@@ -455,3 +455,22 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 - `tests/thong-bao.int.test.ts`: thông báo người chốt bắn khi Duyệt, link mở thẳng task.
 - `e2e/v16-01-tai-hien-cho-chot.spec.ts` (bước 1) đổi thành `e2e/v16-03-duyet-len-cho-chot.spec.ts` theo hành vi mới.
 - E2E cũ (bước 5–11, bộ nghiệm thu v1.4) sửa ở bước 11.
+
+## v1.6 – Bước 4: Bỏ "xin thêm task mở rộng" (mục 3) ✅
+
+**Đã làm**
+- Ẩn giao diện: khối "Xin thêm task" ở Trong kỳ; tab "Xin thêm task", ô đếm và cột "Xin thêm chờ duyệt" ở màn hình Duyệt (xóa các component `xin-them-task.tsx`, `tab-xin-them.tsx`, `nut-duyet-yeu-cau.tsx`).
+- Chặn ở server: `xinThemTask`, `duyetYeuCau`, `tuChoiYeuCau` vẫn kiểm tra vai trò rồi trả **"Chức năng không còn sử dụng"** (`src/lib/services/yeu-cau.ts` → `chanXinThemTask`). Không tạo yêu cầu, không giao task.
+- Admin: form task **bỏ ô chọn loại**; task mới luôn Bắt buộc (server bỏ qua `loai` client gửi); sửa task chỉ sửa chữ/thứ tự, không đổi loại. Task Mở rộng cũ hiện nhãn *"Mở rộng – không còn sử dụng"*.
+- Tính toán / hiển thị: `TASK_DANG_DUNG` (`src/lib/cai-tien.ts`, loại `BAT_BUOC` + `CAI_TIEN`) lọc mọi truy vấn `KpiTask`: Trong kỳ/Cuối kỳ, Duyệt (tổng quan, hàng chờ, tab task), Chốt, `tinhKetQua`, báo cáo, nhắc việc, Xem cấu hình. Task Mở rộng cũ không nộp, không duyệt/chốt được (404), trang chi tiết task → 404.
+- Giữ nguyên dữ liệu: bảng `YeuCauThemTask`, giá trị `MO_RONG`, task Mở rộng cũ không bị xóa. Seed không tạo task Mở rộng (bước 2).
+
+**Tự chọn**
+- Mã lỗi 409 cho "Chức năng không còn sử dụng".
+- Nút "Reset dữ liệu" của admin vẫn xóa `YeuCauThemTask` (dữ liệu người dùng, như v1.4).
+
+**Test cũ sửa theo hành vi mới (bỏ xin thêm task)**
+- `tests/kpi-task.int.test.ts` › "xin thêm task mở rộng": thành 2 test — gọi xin thêm / duyệt / từ chối yêu cầu → "Chức năng không còn sử dụng", dữ liệu cũ giữ nguyên; task Mở rộng cũ đã giao bị bỏ qua (không tính, không nộp, không duyệt).
+- `tests/thong-bao.int.test.ts` › "xin thêm task → người duyệt…": thành "không còn thông báo xin thêm".
+- `tests/phan-viec.int.test.ts` › "khóa sửa/xóa…": không còn đổi loại task (gửi tay `loai` bị bỏ qua), đăng ký đã duyệt thì không thêm task được; thêm test "task mới luôn Bắt buộc kể cả khi request gửi Mở rộng".
+- `tests/kich-ban-15.int.test.ts` (kịch bản v1.4 có task Mở rộng) viết lại theo kịch bản mục 12.1 ở bước 6.

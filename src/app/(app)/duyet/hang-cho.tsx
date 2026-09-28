@@ -5,6 +5,7 @@ import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { NguoiDung } from "@/lib/auth/dal";
 import { nguoiToiDuyet } from "@/lib/co-cau";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { viTriDuocDuyet } from "@/lib/kpi/chuoi";
 import { laGop, nhanChoQuanLy } from "@/lib/kpi/trang-thai";
@@ -23,7 +24,7 @@ export async function HangCho({ m, ky }: { m: NguoiDung; ky: Ky }) {
   const viTri = viTriDuocDuyet(m.role);
   const trangThais: TrangThaiTask[] = viTri && laGop(viTri) ? ["CHO_DUYET", "DA_DUYET"] : ["CHO_DUYET", "TRA_VE"];
   const tasks = await db.kpiTask.findMany({
-    where: { kyId: ky.id, userId: { in: ids }, trangThai: { in: trangThais } },
+    where: { kyId: ky.id, userId: { in: ids }, trangThai: { in: trangThais }, task: TASK_DANG_DUNG },
     orderBy: { capNhatLuc: "asc" },
     include: {
       user: { select: { hoTen: true, username: true, role: true } },

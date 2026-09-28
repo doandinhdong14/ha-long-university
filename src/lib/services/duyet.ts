@@ -3,6 +3,7 @@
 import "server-only";
 import type { KetQua, TrangThaiDangKy, TrangThaiTask } from "@/generated/prisma/enums";
 import type { NguoiDung } from "@/lib/auth/dal";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { nguoiToiDuyet, type NguoiCoCau } from "@/lib/co-cau";
 import { db } from "@/lib/db";
 import { layCoCau } from "@/lib/services/co-cau";
@@ -17,7 +18,6 @@ export type DongTongQuan = {
   nguoi: NguoiCoCau;
   dangKy: { trangThai: TrangThaiDangKy; xepLoai: string | null; tongDiem: number } | null;
   demTask: Partial<Record<TrangThaiTask, number>>;
-  xinThemChoDuyet: number;
   /** Kết quả đã chốt kỳ (chỉ có sau khi chốt kỳ). */
   ketQuaKy: { ketQua: KetQua; xepLoai: string } | null;
 };
@@ -27,13 +27,12 @@ export async function tongQuanDuyet(m: NguoiDung, kyId: string): Promise<DongTon
   const cc = await layCoCau();
   const ds = nguoiToiDuyet(m, cc);
   const ids = ds.map((x) => x.id);
-  const [dangKys, tasks, yeuCaus, ketQuas] = await Promise.all([
+  const [dangKys, tasks, ketQuas] = await Promise.all([
     db.dangKy.findMany({
       where: { kyId, userId: { in: ids } },
       select: { userId: true, trangThai: true, xepLoai: true, tongDiem: true },
     }),
-    db.kpiTask.groupBy({ by: ["userId", "trangThai"], where: { kyId, userId: { in: ids } }, _count: true }),
-    db.yeuCauThemTask.groupBy({ by: ["userId"], where: { kyId, userId: { in: ids }, trangThai: "CHO_DUYET" }, _count: true }),
+    db.kpiTask.groupBy({ by: ["userId", "trangThai"], where: { kyId, userId: { in: ids }, task: TASK_DANG_DUNG }, _count: true }),
     db.ketQuaKy.findMany({ where: { kyId, userId: { in: ids } }, select: { userId: true, ketQua: true, xepLoai: true } }),
   ]);
   return ds.map((nguoi) => {
@@ -42,7 +41,6 @@ export async function tongQuanDuyet(m: NguoiDung, kyId: string): Promise<DongTon
       nguoi,
       dangKy: dk ? { trangThai: dk.trangThai, xepLoai: dk.xepLoai, tongDiem: dk.tongDiem } : null,
       demTask: Object.fromEntries(tasks.filter((t) => t.userId === nguoi.id).map((t) => [t.trangThai, t._count])),
-      xinThemChoDuyet: yeuCaus.find((y) => y.userId === nguoi.id)?._count ?? 0,
       ketQuaKy: ketQuas.find((k) => k.userId === nguoi.id) ?? null,
     };
   });

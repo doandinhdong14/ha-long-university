@@ -5,6 +5,7 @@ import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
 import { ChiTietTaskQuanLy } from "@/components/kpi/chi-tiet-task-quan-ly";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { laGop, nhanChoQuanLy } from "@/lib/kpi/trang-thai";
 import { NHAN_LOAI_TASK } from "@/lib/nhan";
@@ -31,7 +32,7 @@ export async function TabTask({
     ? TAT_CA_TRANG_THAI.filter((t) => t !== "CHO_CHOT" && t !== "TRA_VE")
     : TAT_CA_TRANG_THAI.filter((t) => t !== "DA_DUYET");
   const kpiTasks = await db.kpiTask.findMany({
-    where: { kyId: ky.id, userId: nguoi.id },
+    where: { kyId: ky.id, userId: nguoi.id, task: TASK_DANG_DUNG },
     include: {
       task: { select: { ten: true, loai: true, thuTu: true, nhiemVu: { select: { ten: true, thuTu: true } } } },
       _count: { select: { baiNops: true } },

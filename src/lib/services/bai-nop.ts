@@ -17,7 +17,7 @@ import { layChuoi, layFile, layLink, luuFiles } from "./file-upload";
  */
 export async function nopBaiMoi(u: NguoiLamKpi, kpiTaskId: string, form: FormData) {
   const kt = await db.kpiTask.findUnique({ where: { id: kpiTaskId }, include: { ky: true, task: true } });
-  if (!kt || kt.userId !== u.id) throw new LoiNghiepVu("Không tìm thấy task.", 404);
+  if (!kt || kt.userId !== u.id || kt.task.loai === "MO_RONG") throw new LoiNghiepVu("Không tìm thấy task.", 404);
   chan(lyDoKhongThaoTacTask(kt.ky));
   const gop = laGop(u.role);
   if (kt.trangThai === "CHO_DUYET") {

@@ -5,6 +5,7 @@ import "server-only";
 import type { DoiTuong, LoaiTask } from "@/generated/prisma/enums";
 import type { NguoiDung } from "@/lib/auth/dal";
 import { khoaPhuTrach, phamViBaoCao, tenDonVi } from "@/lib/co-cau";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import type { KetQuaTinh, MucThieu, MucVuot } from "@/lib/ket-qua";
 import { DUOC_TINH } from "@/lib/ket-qua";
@@ -91,7 +92,7 @@ export async function layDuLieuBaoCao(
       include: { nhiemVus: { include: { nhiemVu: { select: { ten: true, diem: true, thuTu: true } } } } },
     }),
     db.kpiTask.findMany({
-      where: { kyId: ky.id, userId: { in: ids } },
+      where: { kyId: ky.id, userId: { in: ids }, task: TASK_DANG_DUNG },
       include: {
         task: { select: { ten: true, loai: true, thuTu: true, nhiemVu: { select: { ten: true, thuTu: true } } } },
         baiNops: { orderBy: { nopLuc: "desc" }, select: { nopLuc: true, nhanXet: true, duyetLuc: true } },

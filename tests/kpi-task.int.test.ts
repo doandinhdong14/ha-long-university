@@ -176,30 +176,46 @@ describe("HT với task HP: Duyệt rồi Chốt (2 nút, giữ nguyên ở v1.6
   });
 });
 
-describe("xin thêm task mở rộng", () => {
-  it("xin → người duyệt duyệt → task Chưa làm; không xin trùng; không xin task của nhiệm vụ chưa đăng ký", async () => {
+describe("xin thêm task mở rộng – v1.6 bỏ chức năng, server từ chối", () => {
+  it("tạo yêu cầu, duyệt, từ chối yêu cầu → \"Chức năng không còn sử dụng\"; dữ liệu cũ giữ nguyên, không tạo task", async () => {
     const an = await user("gv.nguyenvanan");
     const nv1 = await db.nhiemVu.findFirstOrThrow({ where: { kyId, doiTuong: "GV", thuTu: 1 }, include: { tasks: true } });
-    const moRong = nv1.tasks.find((t) => t.loai === "MO_RONG")!;
-    await dangNhapNhu("gv.nguyenvanan");
-    expect((await xinThemTask(moRong.id)).ok).toBe(true);
-    expect(await xinThemTask(moRong.id)).toEqual({ ok: false, error: "Bạn đã xin task này, đang chờ duyệt." });
-    const nv9 = await db.nhiemVu.findFirstOrThrow({ where: { kyId, doiTuong: "GV", thuTu: 9 }, include: { tasks: true } });
-    expect(await xinThemTask(nv9.tasks.find((t) => t.loai === "MO_RONG")!.id)).toEqual({
-      ok: false,
-      error: "Chỉ xin được task mở rộng thuộc nhiệm vụ bạn đã được duyệt.",
-    });
+    // Task Mở rộng cũ (dữ liệu trước v1.6) + một yêu cầu cũ đang chờ duyệt.
+    const moRong = await db.task.create({ data: { nhiemVuId: nv1.id, ten: "Task mở rộng cũ", loai: "MO_RONG", thuTu: 9 } });
+    const yc = await db.yeuCauThemTask.create({ data: { userId: an.id, kyId, taskId: moRong.id } });
+    const loi = { ok: false, error: "Chức năng không còn sử dụng" };
 
-    const yc = await db.yeuCauThemTask.findFirstOrThrow({ where: { userId: an.id } });
-    await dangNhapNhu("tk.levankhoa");
-    expect((await duyetYeuCau({ yeuCauId: yc.id })).ok).toBe(false);
-    await dangNhapNhu("tbm.phamthibich");
-    expect(await tuChoiYeuCau({ yeuCauId: yc.id, nhanXet: "" })).toEqual({ ok: false, error: "Vui lòng nhập nhận xét." });
-    expect((await duyetYeuCau({ yeuCauId: yc.id })).ok).toBe(true);
-    const kt = await db.kpiTask.findUniqueOrThrow({ where: { userId_taskId: { userId: an.id, taskId: moRong.id } } });
-    expect(kt.trangThai).toBe("CHUA_LAM");
     await dangNhapNhu("gv.nguyenvanan");
-    expect(await xinThemTask(moRong.id)).toEqual({ ok: false, error: "Task này đã có trong danh sách của bạn." });
+    expect(await xinThemTask(moRong.id)).toEqual(loi);
+    await dangNhapNhu("tbm.phamthibich");
+    expect(await duyetYeuCau({ yeuCauId: yc.id })).toEqual(loi);
+    expect(await tuChoiYeuCau({ yeuCauId: yc.id, nhanXet: "x" })).toEqual(loi);
+    // Vai trò không liên quan vẫn bị chặn quyền trước.
+    await dangNhapNhu("admin.quantri");
+    expect(await xinThemTask(moRong.id)).toEqual({ ok: false, error: "Bạn không có quyền thực hiện thao tác này." });
+
+    expect(await db.yeuCauThemTask.findUniqueOrThrow({ where: { id: yc.id } })).toMatchObject({ trangThai: "CHO_DUYET" });
+    expect(await db.kpiTask.count({ where: { taskId: moRong.id } })).toBe(0);
+    await db.yeuCauThemTask.delete({ where: { id: yc.id } });
+    await db.task.delete({ where: { id: moRong.id } });
+  });
+
+  it("task Mở rộng cũ đã giao: bị bỏ qua hoàn toàn – không tính, không nộp, không duyệt được", async () => {
+    const an = await user("gv.nguyenvanan");
+    const nv1 = await db.nhiemVu.findFirstOrThrow({ where: { kyId, doiTuong: "GV", thuTu: 1 } });
+    const moRong = await db.task.create({ data: { nhiemVuId: nv1.id, ten: "Task mở rộng cũ 2", loai: "MO_RONG", thuTu: 9 } });
+    const truoc = (await tinhKetQua(kyId, an.id))!;
+    const kt = await db.kpiTask.create({ data: { userId: an.id, kyId, taskId: moRong.id, trangThai: "CHO_DUYET" } });
+    const sau = (await tinhKetQua(kyId, an.id))!;
+    expect(sau.thongKe).toEqual(truoc.thongKe);
+    expect(sau.soTreo).toBe(truoc.soTreo);
+    await dangNhapNhu("tbm.phamthibich");
+    expect(await thaoTac(kt.id, "DUYET")).toEqual({ ok: false, error: "Không tìm thấy task." });
+    await db.kpiTask.update({ where: { id: kt.id }, data: { trangThai: "CHUA_LAM" } });
+    await dangNhapNhu("gv.nguyenvanan");
+    expect((await nop(kt.id)).status).toBe(404);
+    await db.kpiTask.delete({ where: { id: kt.id } });
+    await db.task.delete({ where: { id: moRong.id } });
   });
 });
 

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { yeuCauVaiTro } from "@/lib/auth/dal";
 import { nguoiToiChot, tenDonVi } from "@/lib/co-cau";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { viTriDuocChot } from "@/lib/kpi/chuoi";
 import { nhanChoQuanLy } from "@/lib/kpi/trang-thai";
@@ -52,9 +53,9 @@ export default async function TrangChot(props: PageProps<"/chot">) {
   const idsLoc = ds.filter((x) => (!nguoiLoc || x.id === nguoiLoc) && (!donViLoc || tenDonVi(x, cc) === donViLoc)).map((x) => x.id);
 
   const [soChoChot, tasks] = await Promise.all([
-    db.kpiTask.count({ where: { kyId: ky.id, userId: { in: ds.map((x) => x.id) }, trangThai: "CHO_CHOT" } }),
+    db.kpiTask.count({ where: { kyId: ky.id, userId: { in: ds.map((x) => x.id) }, trangThai: "CHO_CHOT", task: TASK_DANG_DUNG } }),
     db.kpiTask.findMany({
-      where: { kyId: ky.id, userId: { in: idsLoc }, trangThai: loc === TAT_CA ? { in: NGUOI_CHOT_THAY } : loc },
+      where: { kyId: ky.id, userId: { in: idsLoc }, trangThai: loc === TAT_CA ? { in: NGUOI_CHOT_THAY } : loc, task: TASK_DANG_DUNG },
       // Cũ nhất lên trước theo thời điểm vào Chờ chốt (B10; v1.6: lúc người duyệt duyệt).
       orderBy: [{ guiChotLuc: "asc" }, { capNhatLuc: "asc" }],
       include: {
@@ -67,7 +68,7 @@ export default async function TrangChot(props: PageProps<"/chot">) {
   const chon =
     typeof sp.task === "string"
       ? await db.kpiTask.findFirst({
-          where: { id: sp.task, kyId: ky.id, userId: { in: ds.map((x) => x.id) }, trangThai: { in: NGUOI_CHOT_THAY } },
+          where: { id: sp.task, kyId: ky.id, userId: { in: ds.map((x) => x.id) }, trangThai: { in: NGUOI_CHOT_THAY }, task: TASK_DANG_DUNG },
           select: { id: true },
         })
       : null;

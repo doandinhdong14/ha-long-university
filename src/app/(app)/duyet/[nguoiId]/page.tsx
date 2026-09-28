@@ -1,4 +1,5 @@
-// Trang chi tiết 1 người trên màn hình Duyệt (mục 6.1), 3 tab: Đăng ký nhiệm vụ | Task và minh chứng | Xin thêm task.
+// Trang chi tiết 1 người trên màn hình Duyệt (mục 6.1), 2 tab: Đăng ký nhiệm vụ | Task và minh chứng
+// (v1.6: bỏ tab Xin thêm task).
 // Chỉ mở được người mà mình là người duyệt (theo cơ cấu hiện tại), người khác → 404.
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,12 +15,10 @@ import { dsChonKy, layKyTheoUrl } from "@/lib/services/ky";
 import { cn } from "@/lib/utils";
 import { TabDangKy } from "./tab-dang-ky";
 import { TabTask } from "./tab-task";
-import { TabXinThem } from "./tab-xin-them";
 
 const TABS = [
   { id: "dang-ky", nhan: "Đăng ký nhiệm vụ" },
   { id: "task", nhan: "Task và minh chứng" },
-  { id: "xin-them", nhan: "Xin thêm task" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
@@ -79,7 +78,6 @@ export default async function TrangDuyetMotNguoi(props: PageProps<"/duyet/[nguoi
               taskId={typeof sp.task === "string" ? sp.task : undefined}
             />
           )}
-          {tab === "xin-them" && <TabXinThem ky={ky} userId={nguoi.id} />}
         </>
       )}
     </div>

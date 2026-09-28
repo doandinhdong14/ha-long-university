@@ -65,15 +65,19 @@ describe("bảng sự kiện mục 11 – chuỗi GV → TBM → TK", () => {
     expect((await tinMoiNhat("gv.tranthibinh"))?.noiDung).not.toMatch(/Thiếu dấu/);
   });
 
-  it("xin thêm task → người duyệt; yêu cầu được duyệt → người làm", async () => {
-    const mr = await db.task.findFirstOrThrow({ where: { loai: "MO_RONG", nhiemVu: { kyId, doiTuong: "GV", thuTu: 1 } } });
+  it("v1.6: bỏ xin thêm task → không còn thông báo xin thêm cho người duyệt / người làm", async () => {
+    const nv = await db.nhiemVu.findFirstOrThrow({ where: { kyId, doiTuong: "GV", thuTu: 1 } });
+    const mr = await db.task.create({ data: { nhiemVuId: nv.id, ten: "Task mở rộng cũ", loai: "MO_RONG", thuTu: 9 } });
+    const dem = async () => db.thongBao.count({ where: { noiDung: { contains: "thêm task" } } });
+    const truoc = await dem();
     await dangNhapNhu("gv.tranthibinh");
-    await xinThemTask(mr.id);
-    expect((await tinMoiNhat("tbm.phamthibich"))?.noiDung).toMatch(/xin làm thêm task mở rộng/);
+    expect(await xinThemTask(mr.id)).toEqual({ ok: false, error: "Chức năng không còn sử dụng" });
+    const yc = await db.yeuCauThemTask.create({ data: { userId: (await user("gv.tranthibinh")).id, kyId, taskId: mr.id } });
     await dangNhapNhu("tbm.phamthibich");
-    const yc = await db.yeuCauThemTask.findFirstOrThrow();
-    await duyetYeuCau({ yeuCauId: yc.id });
-    expect((await tinMoiNhat("gv.tranthibinh"))?.noiDung).toMatch(/Yêu cầu làm thêm task .* đã được duyệt/);
+    expect((await duyetYeuCau({ yeuCauId: yc.id })).ok).toBe(false);
+    expect(await dem()).toBe(truoc);
+    await db.yeuCauThemTask.delete({ where: { id: yc.id } });
+    await db.task.delete({ where: { id: mr.id } });
   });
 });
 

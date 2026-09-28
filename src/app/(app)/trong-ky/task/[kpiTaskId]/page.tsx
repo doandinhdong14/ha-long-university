@@ -28,7 +28,7 @@ export default async function TrangTaskCuaToi(props: PageProps<"/trong-ky/task/[
     where: { id: kpiTaskId },
     include: { ky: true, task: { include: { nhiemVu: { select: { ten: true } } } } },
   });
-  if (!kt || kt.userId !== u.id) notFound();
+  if (!kt || kt.userId !== u.id || kt.task.loai === "MO_RONG") notFound();
 
   const lichSu = await layLichSuNop(kt.id);
   const lyDoKhoa = lyDoKhongThaoTacTask(kt.ky);

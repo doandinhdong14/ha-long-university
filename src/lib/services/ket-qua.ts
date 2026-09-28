@@ -2,6 +2,7 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import type { DoiTuong } from "@/generated/prisma/enums";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { tinhKetQuaThuan, type KetQuaTinh, type TaskKetQua } from "@/lib/ket-qua";
 import { laDoiTuong } from "@/lib/roles";
@@ -23,7 +24,7 @@ export async function taiKetQua(
     select: { userId: true, trangThai: true, xepLoai: true },
   });
   const kpiTasks = await tx.kpiTask.findMany({
-    where: { kyId, userId: { in: ids } },
+    where: { kyId, userId: { in: ids }, task: TASK_DANG_DUNG },
     select: {
       userId: true,
       trangThai: true,

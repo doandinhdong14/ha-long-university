@@ -151,11 +151,12 @@ describe("tạo, sao chép, công bố kỳ", () => {
 });
 
 describe("khóa sửa/xóa khi đã có người đăng ký / làm (mục 8.2, B13)", () => {
-  it("nhiệm vụ đã có đăng ký: không xóa, không sửa điểm; sửa chữ được. Task đã có người làm: không xóa, không đổi loại", async () => {
+  it("nhiệm vụ đã có đăng ký: không xóa, không sửa điểm; sửa chữ được. Task đã có người làm: không xóa; không còn đổi loại (v1.6)", async () => {
     await dangNhapNhu("admin.quantri");
     const tk = await user("tk.levankhoa");
     const nv = await db.nhiemVu.findFirstOrThrow({
-      where: { kyId: kySeedId, doiTuong: "TK" },
+      where: { kyId: kySeedId, doiTuong: "TK", laCaiTien: false },
+      orderBy: { thuTu: "asc" },
       include: { tasks: { orderBy: { thuTu: "asc" } } },
     });
     await db.dangKy.create({
@@ -172,15 +173,26 @@ describe("khóa sửa/xóa khi đã có người đăng ký / làm (mục 8.2, B
     expect((await suaNhiemVu({ id: nv.id, ten: `${nv.ten} (sửa)`, diem: nv.diem })).ok).toBe(true);
 
     expect(await xoaTask(taskBb.id)).toEqual({ ok: false, error: "Task đã có người làm hoặc xin làm, không thể xóa." });
-    expect(await suaTask({ id: taskBb.id, ten: taskBb.ten, loai: "MO_RONG" })).toEqual({
-      ok: false,
-      error: "Task đã có người làm hoặc xin làm, không thể đổi loại (chỉ sửa được chữ).",
-    });
-    expect((await suaTask({ id: taskBb.id, ten: `${taskBb.ten} (sửa)`, loai: "BAT_BUOC" })).ok).toBe(true);
+    // v1.6: form không còn ô Loại; request sửa tay gửi loai thì server bỏ qua, loại giữ nguyên.
+    const suaTay = { id: taskBb.id, ten: `${taskBb.ten} (sửa)`, loai: "MO_RONG" } as Parameters<typeof suaTask>[0];
+    expect((await suaTask(suaTay)).ok).toBe(true);
+    expect((await db.task.findUniqueOrThrow({ where: { id: taskBb.id } })).loai).toBe("BAT_BUOC");
 
-    // Đăng ký đã duyệt → không thêm task bắt buộc; task mở rộng vẫn thêm được.
-    expect((await themTask({ nhiemVuId: nv.id, ten: "Mới", loai: "BAT_BUOC" })).ok).toBe(false);
-    expect((await themTask({ nhiemVuId: nv.id, ten: "Mới mở rộng", loai: "MO_RONG" })).ok).toBe(true);
+    // Đăng ký đã duyệt → không thêm task được nữa (không còn task mở rộng).
+    expect(await themTask({ nhiemVuId: nv.id, ten: "Mới" })).toEqual({
+      ok: false,
+      error: "Nhiệm vụ đã có danh sách đăng ký được duyệt, không thể thêm task bắt buộc.",
+    });
+  });
+
+  it("v1.6: task mới luôn là Bắt buộc, kể cả khi request gửi loai Mở rộng", async () => {
+    await dangNhapNhu("admin.quantri");
+    const nv = await db.nhiemVu.findFirstOrThrow({ where: { kyId: kySeedId, doiTuong: "HP", laCaiTien: false }, orderBy: { thuTu: "asc" } });
+    const guiTay = { nhiemVuId: nv.id, ten: "Task gửi tay", loai: "MO_RONG" } as Parameters<typeof themTask>[0];
+    expect((await themTask(guiTay)).ok).toBe(true);
+    const t = await db.task.findFirstOrThrow({ where: { nhiemVuId: nv.id, ten: "Task gửi tay" } });
+    expect(t.loai).toBe("BAT_BUOC");
+    await db.task.delete({ where: { id: t.id } });
   });
 
   it("kỳ đã chốt → khóa mọi thay đổi, kể cả sửa ngày", async () => {

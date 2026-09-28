@@ -1,6 +1,7 @@
 // Dữ liệu KPI của chính người làm trong một kỳ, dùng chung cho trang Trong kỳ và Cuối kỳ.
 import "server-only";
 import type { Ky } from "@/generated/prisma/client";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { taiKetQua } from "@/lib/services/ket-qua";
 
@@ -9,16 +10,11 @@ export async function taiKpiCuaToi(ky: Ky, u: { id: string; role: string }) {
     db.dangKy.findUnique({
       where: { kyId_userId: { kyId: ky.id, userId: u.id } },
       include: {
-        nhiemVus: {
-          include: {
-            nhiemVu: { include: { tasks: { where: { loai: "MO_RONG" }, orderBy: [{ thuTu: "asc" }, { ten: "asc" }] } } },
-          },
-          orderBy: { nhiemVu: { thuTu: "asc" } },
-        },
+        nhiemVus: { include: { nhiemVu: true }, orderBy: { nhiemVu: { thuTu: "asc" } } },
       },
     }),
     db.kpiTask.findMany({
-      where: { userId: u.id, kyId: ky.id },
+      where: { userId: u.id, kyId: ky.id, task: TASK_DANG_DUNG },
       include: { task: { select: { ten: true, loai: true, thuTu: true, nhiemVuId: true } } },
     }),
     taiKetQua(ky.id, [u]),

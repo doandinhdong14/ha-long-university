@@ -31,7 +31,7 @@ async function layTask(tx: Tx, kpiTaskId: string) {
     include: {
       ky: true,
       user: { select: { id: true, hoTen: true, role: true, boMonId: true, khoaId: true } },
-      task: { select: { ten: true } },
+      task: { select: { ten: true, loai: true } },
     },
   });
 }
@@ -50,7 +50,8 @@ export async function thucHienTask(
   const { hanhDong: hd, nhanXet } = input;
   return db.$transaction(async (tx) => {
     const kt = await layTask(tx, input.kpiTaskId);
-    if (!kt || !laDoiTuong(kt.user.role)) throw new LoiNghiepVu("Không tìm thấy task.", 404);
+    // v1.6: task Mở rộng cũ bị bỏ qua hoàn toàn.
+    if (!kt || !laDoiTuong(kt.user.role) || kt.task.loai === "MO_RONG") throw new LoiNghiepVu("Không tìm thấy task.", 404);
     const gop = laGop(kt.user.role);
     const luat = luatChuyen(hd, gop);
     chan(luat ? null : lyDoKhongChuyen(hd, kt.trangThai, gop));

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { yeuCauVaiTro } from "@/lib/auth/dal";
 import { tenDonVi } from "@/lib/co-cau";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { nhanChoQuanLy } from "@/lib/kpi/trang-thai";
 import { NHAN_DANG_KY, NHAN_LOAI_TASK } from "@/lib/nhan";
@@ -34,7 +35,7 @@ export default async function TrangTienDoMotNguoi(props: PageProps<"/admin/cau-h
   const [dk, kpiTasks, ketQua] = await Promise.all([
     db.dangKy.findUnique({ where: { kyId_userId: { kyId: ky.id, userId } } }),
     db.kpiTask.findMany({
-      where: { kyId: ky.id, userId },
+      where: { kyId: ky.id, userId, task: TASK_DANG_DUNG },
       include: { task: { select: { ten: true, loai: true, thuTu: true, nhiemVu: { select: { ten: true, thuTu: true } } } } },
     }),
     taiKetQua(ky.id, [u]),

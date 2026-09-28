@@ -2,9 +2,17 @@
 // điểm 0, có đúng 1 task loại CAI_TIEN. Người làm KPI tick "Đăng ký cải tiến" = thêm nhiệm vụ này vào
 // DangKyNhiemVu. Không dùng alias "@/" để seed (tsx) import được.
 import type { Prisma } from "../generated/prisma/client";
+import type { LoaiTask } from "../generated/prisma/enums";
 import { DOI_TUONGS } from "./roles";
 
 type Tx = Prisma.TransactionClient;
+
+/**
+ * Loại task còn dùng. v1.6 mục 3: task Mở rộng (dữ liệu cũ) bị bỏ qua hoàn toàn – không tạo, không đếm,
+ * không hiện. Mọi truy vấn KpiTask lọc bằng `task: TASK_DANG_DUNG`.
+ */
+export const LOAI_TASK_DANG_DUNG: LoaiTask[] = ["BAT_BUOC", "CAI_TIEN"];
+export const TASK_DANG_DUNG = { loai: { in: LOAI_TASK_DANG_DUNG } };
 
 /** Phần trăm cộng thêm khi task cải tiến được chốt (mục 4.1). */
 export const THUONG_CAI_TIEN = 10;

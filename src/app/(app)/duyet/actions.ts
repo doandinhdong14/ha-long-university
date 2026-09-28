@@ -5,7 +5,7 @@
 import { kiemTraVaiTro } from "@/lib/auth/dal";
 import { hanhDong } from "@/lib/loi";
 import { duyetDangKy as duyetDk, tuChoiDangKy as tuChoiDk } from "@/lib/services/dang-ky";
-import { duyetYeuCau as duyetYc, tuChoiYeuCau as tuChoiYc } from "@/lib/services/yeu-cau";
+import { chanXinThemTask } from "@/lib/services/yeu-cau";
 import { docDuLieu, NhanXetBatBuoc, NhanXetTuyChon } from "@/lib/validate";
 
 const NGUOI_DUYET = ["TBM", "TK", "HP", "HT"] as const;
@@ -24,16 +24,19 @@ export async function tuChoiDangKy(input: { dangKyId: string; nhanXet: string })
   });
 }
 
-export async function duyetYeuCau(input: { yeuCauId: string; nhanXet?: string }) {
+/** v1.6: bỏ xin thêm task mở rộng – duyệt / từ chối yêu cầu đều trả "Chức năng không còn sử dụng". */
+export async function duyetYeuCau(input?: unknown) {
+  void input;
   return hanhDong(async () => {
-    const m = await kiemTraVaiTro(...NGUOI_DUYET);
-    return duyetYc(m, { yeuCauId: input.yeuCauId, nhanXet: docDuLieu(NhanXetTuyChon, input.nhanXet) });
+    await kiemTraVaiTro(...NGUOI_DUYET);
+    chanXinThemTask();
   });
 }
 
-export async function tuChoiYeuCau(input: { yeuCauId: string; nhanXet: string }) {
+export async function tuChoiYeuCau(input?: unknown) {
+  void input;
   return hanhDong(async () => {
-    const m = await kiemTraVaiTro(...NGUOI_DUYET);
-    return tuChoiYc(m, { yeuCauId: input.yeuCauId, nhanXet: docDuLieu(NhanXetBatBuoc, input.nhanXet) });
+    await kiemTraVaiTro(...NGUOI_DUYET);
+    chanXinThemTask();
   });
 }

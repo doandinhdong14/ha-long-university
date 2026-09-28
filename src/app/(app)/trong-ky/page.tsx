@@ -1,7 +1,6 @@
 // Trong kỳ – làm task và theo dõi tiến độ (mục 5.2): một trang cho GV, TBM, TK, HP.
 // Biểu đồ và % dùng chung hàm tinhKetQua (chỉ task DA_CHOT được tính).
 import { AlertTriangle } from "lucide-react";
-import type { TrangThaiDuyet } from "@/generated/prisma/enums";
 import { TrangTieuDe } from "@/components/chung/trang-tieu-de";
 import { ChonKy } from "@/components/chung/chon-ky";
 import { DemNguoc } from "@/components/chung/dem-nguoc";
@@ -9,16 +8,12 @@ import { KhoiKetQua } from "@/components/kpi/khoi-ket-qua";
 import { ChuaDuyetDanhSach, DanhSachTaskCuaToi, TongQuanTask, type KpiTaskCuaToi } from "@/components/kpi/kpi-cua-toi";
 import { yeuCauNguoiLamKpi } from "@/lib/auth/dal";
 import { lyDoThieuNguoi } from "@/lib/co-cau";
-import { db } from "@/lib/db";
 import type { KetQuaTinh } from "@/lib/ket-qua";
-import { CHUOI } from "@/lib/kpi/chuoi";
-import { chucDanh } from "@/lib/roles";
 import { lyDoKhongThaoTacTask } from "@/lib/rules";
 import { layCoCau } from "@/lib/services/co-cau";
 import { taiKpiCuaToi } from "@/lib/services/kpi-cua-toi";
 import { dsChonKy, layKyTheoUrl } from "@/lib/services/ky";
 import { deadline, hienNgayGio } from "@/lib/time";
-import { XinThemTask, type TaskMoRong } from "./xin-them-task";
 
 export default async function TrangTrongKy(props: PageProps<"/trong-ky">) {
   const u = await yeuCauNguoiLamKpi();
@@ -33,13 +28,8 @@ export default async function TrangTrongKy(props: PageProps<"/trong-ky">) {
     );
   }
 
-  const [{ dk, kpiTasks, kq, ketQuaKy }, yeuCaus, cc] = await Promise.all([
-    taiKpiCuaToi(ky, u),
-    db.yeuCauThemTask.findMany({ where: { userId: u.id, kyId: ky.id }, orderBy: { taoLuc: "desc" } }),
-    layCoCau(),
-  ]);
+  const [{ dk, kpiTasks, kq, ketQuaKy }, cc] = await Promise.all([taiKpiCuaToi(ky, u), layCoCau()]);
   const daDuyet = dk?.trangThai === "DA_DUYET";
-  const chucDanhDuyet = chucDanh(CHUOI[u.role].duyet);
 
   return (
     <div className="space-y-6">
@@ -64,14 +54,12 @@ export default async function TrangTrongKy(props: PageProps<"/trong-ky">) {
           doiTuong={u.role}
           lyDoKhoa={lyDoKhongThaoTacTask(ky)}
           lyDoThieuDuyet={lyDoThieuNguoi(u, cc, "duyet")}
-          chucDanhDuyet={chucDanhDuyet}
           deadlineIso={deadline(ky).toISOString()}
           daChot={ky.daChot}
           xepLoai={dk!.xepLoai}
           kq={kq}
           nhiemVus={dk!.nhiemVus.map((x) => x.nhiemVu)}
           kpiTasks={kpiTasks}
-          yeuCaus={yeuCaus}
         />
       )}
     </div>
@@ -82,38 +70,14 @@ function NoiDungTrongKy(props: {
   doiTuong: "GV" | "TBM" | "TK" | "HP";
   lyDoKhoa: string | null;
   lyDoThieuDuyet: string | null;
-  chucDanhDuyet: string;
   deadlineIso: string;
   daChot: boolean;
   xepLoai: string | null;
   kq: KetQuaTinh;
-  nhiemVus: { id: string; ten: string; diem: number; tasks: { id: string; ten: string; moTa: string | null }[] }[];
+  nhiemVus: { id: string; ten: string; diem: number }[];
   kpiTasks: KpiTaskCuaToi[];
-  yeuCaus: { taskId: string; trangThai: TrangThaiDuyet; nhanXet: string | null }[];
 }) {
   const { kq } = props;
-  const daCo = new Set(props.kpiTasks.map((g) => g.taskId));
-
-  // Task mở rộng thuộc các nhiệm vụ đã duyệt, kèm tình trạng xin.
-  const moRong: TaskMoRong[] = props.nhiemVus.flatMap((nv) =>
-    nv.tasks.map((t) => {
-      const yc = props.yeuCaus.find((y) => y.taskId === t.id);
-      return {
-        id: t.id,
-        ten: t.ten,
-        moTa: t.moTa,
-        nhiemVu: nv.ten,
-        tinhTrang: daCo.has(t.id)
-          ? "DA_GIAO"
-          : yc?.trangThai === "CHO_DUYET"
-            ? "DANG_CHO"
-            : yc?.trangThai === "TU_CHOI"
-              ? "TU_CHOI"
-              : "CHUA_XIN",
-        nhanXet: yc?.trangThai === "TU_CHOI" ? yc.nhanXet : null,
-      };
-    }),
-  );
 
   return (
     <>
@@ -149,7 +113,6 @@ function NoiDungTrongKy(props: {
         })}
       />
 
-      {!props.daChot && <XinThemTask tasks={moRong} lyDoKhoa={props.lyDoKhoa} chucDanhDuyet={props.chucDanhDuyet} />}
     </>
   );
 }

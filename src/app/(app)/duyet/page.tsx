@@ -53,7 +53,6 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
           { nhan: "Task chờ chốt", so: tong((d) => d.demTask.CHO_CHOT ?? 0), id: "cho-chot" },
           { nhan: "Task bị trả về", so: tong((d) => d.demTask.TRA_VE ?? 0), id: "tra-ve" },
         ]),
-    { nhan: "Yêu cầu xin thêm chờ duyệt", so: tong((d) => d.xinThemChoDuyet), id: "xin-them" },
   ];
 
   return (
@@ -103,7 +102,6 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
                   {gop && <TableHead className="text-right">Chưa chốt</TableHead>}
                   {!gop && <TableHead className="text-right">Chờ chốt</TableHead>}
                   {!gop && <TableHead className="text-right">Bị trả về</TableHead>}
-                  <TableHead className="text-right">Xin thêm chờ duyệt</TableHead>
                   {ky.daChot && <TableHead>Kết quả</TableHead>}
                   <TableHead />
                 </TableRow>
@@ -143,7 +141,6 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
                     {gop && <TableCell className="text-right tabular-nums">{d.demTask.DA_DUYET ?? 0}</TableCell>}
                     {!gop && <TableCell className="text-right tabular-nums">{d.demTask.CHO_CHOT ?? 0}</TableCell>}
                     {!gop && <TableCell className="text-right tabular-nums">{d.demTask.TRA_VE ?? 0}</TableCell>}
-                    <TableCell className="text-right tabular-nums">{d.xinThemChoDuyet}</TableCell>
                     {ky.daChot && (
                       <TableCell data-cot="ket-qua" className="font-medium">
                         {d.ketQuaKy ? `${NHAN_KET_QUA[d.ketQuaKy.ketQua]} – ${d.ketQuaKy.xepLoai}` : "—"}

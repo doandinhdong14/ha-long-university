@@ -6,6 +6,7 @@
 // Mỗi mốc gửi 1 lần / người / kỳ (ThongBao.maSuKien); dùng "≤" để cron lỡ một ngày vẫn nhắc. Chỉ gửi khi N > 0.
 import "server-only";
 import { nguoiChot, nguoiDuyet } from "@/lib/co-cau";
+import { TASK_DANG_DUNG } from "@/lib/cai-tien";
 import { db } from "@/lib/db";
 import { CHUOI } from "@/lib/kpi/chuoi";
 import { DOI_TUONGS, laDoiTuong } from "@/lib/roles";
@@ -67,7 +68,7 @@ export async function guiNhacViec(now: Date = new Date()) {
     // 3. Người duyệt, người chốt: mốc 7 ngày (2 < N ≤ 7) và 2 ngày (N ≤ 2).
     const moc = nDl <= 2 ? 2 : 7;
     const treo = await db.kpiTask.findMany({
-      where: { kyId: ky.id, trangThai: { in: ["DA_DUYET", "CHO_CHOT"] } },
+      where: { kyId: ky.id, trangThai: { in: ["DA_DUYET", "CHO_CHOT"] }, task: TASK_DANG_DUNG },
       select: { trangThai: true, user: { select: { id: true, role: true, boMonId: true, khoaId: true } } },
     });
     const demDuyet = new Map<string, number>();

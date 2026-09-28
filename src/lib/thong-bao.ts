@@ -29,7 +29,7 @@ export const LINK = {
   trongKy: (kyId: string) => `/trong-ky?kyId=${kyId}`,
   cuoiKy: (kyId: string) => `/cuoi-ky?kyId=${kyId}`,
   taskCuaToi: (kpiTaskId: string) => `/trong-ky/task/${kpiTaskId}`,
-  duyetNguoi: (userId: string, kyId: string, tab: "dang-ky" | "task" | "xin-them") =>
+  duyetNguoi: (userId: string, kyId: string, tab: "dang-ky" | "task") =>
     `/duyet/${userId}?kyId=${kyId}&tab=${tab}`,
   duyetTask: (userId: string, kyId: string, kpiTaskId: string) =>
     `/duyet/${userId}?kyId=${kyId}&tab=task&task=${kpiTaskId}`,

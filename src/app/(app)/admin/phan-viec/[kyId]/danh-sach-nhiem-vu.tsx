@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { NutXacNhan } from "@/components/chung/nut-xac-nhan";
 import { useHanhDong } from "@/components/chung/use-hanh-dong";
@@ -133,7 +132,9 @@ function DongTask({ t, nv, khoa }: { t: TaskHienThi; nv: NhiemVuHienThi; khoa: b
     <li className="flex flex-wrap items-center justify-between gap-2 px-3 py-2" data-task={t.ten}>
       <div className="min-w-0">
         <div className="flex items-center gap-2 text-sm">
-          <Badge variant={t.loai === "BAT_BUOC" ? "default" : "outline"}>{NHAN_LOAI_TASK[t.loai]}</Badge>
+          <Badge variant={t.loai === "BAT_BUOC" ? "default" : "outline"}>
+            {t.loai === "MO_RONG" ? "Mở rộng – không còn sử dụng" : NHAN_LOAI_TASK[t.loai]}
+          </Badge>
           <span className="font-medium">{t.ten}</span>
         </div>
         {t.moTa && <p className="mt-0.5 text-xs text-muted-foreground">{t.moTa}</p>}
@@ -234,9 +235,7 @@ function DialogNhiemVu(
 
 function DialogTask({ nv, task, thuTuMoi }: { nv: NhiemVuHienThi; task?: TaskHienThi; thuTuMoi?: number }) {
   const [open, setOpen] = useState(false);
-  const [loai, setLoai] = useState<"BAT_BUOC" | "MO_RONG">(task?.loai === "MO_RONG" ? "MO_RONG" : "BAT_BUOC");
   const { pending, chay } = useHanhDong();
-  const khoaLoai = !!task?.daCoNguoiLam;
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -244,7 +243,6 @@ function DialogTask({ nv, task, thuTuMoi }: { nv: NhiemVuHienThi; task?: TaskHie
     const data = {
       ten: String(f.get("ten")),
       moTa: String(f.get("moTa") ?? ""),
-      loai,
       thuTu: String(f.get("thuTu") ?? "0"),
     };
     chay(() => (task ? suaTask({ id: task.id, ...data }) : themTask({ nhiemVuId: nv.id, ...data })), {
@@ -279,24 +277,10 @@ function DialogTask({ nv, task, thuTuMoi }: { nv: NhiemVuHienThi; task?: TaskHie
             <Label htmlFor="t-moTa">Mô tả</Label>
             <Textarea id="t-moTa" name="moTa" defaultValue={task?.moTa ?? ""} maxLength={2000} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="t-loai">Loại</Label>
-              <Select value={loai} onValueChange={(v) => setLoai(v as "BAT_BUOC" | "MO_RONG")} disabled={khoaLoai}>
-                <SelectTrigger id="t-loai" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BAT_BUOC">Bắt buộc</SelectItem>
-                  <SelectItem value="MO_RONG">Mở rộng</SelectItem>
-                </SelectContent>
-              </Select>
-              {khoaLoai && <p className="text-xs text-muted-foreground">Đã có người làm, không đổi loại được.</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="t-thuTu">Thứ tự</Label>
-              <Input id="t-thuTu" name="thuTu" type="number" min={0} defaultValue={task?.thuTu ?? thuTuMoi} />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="t-thuTu">Thứ tự</Label>
+            <Input id="t-thuTu" name="thuTu" type="number" min={0} defaultValue={task?.thuTu ?? thuTuMoi} className="w-32" />
+            {!task && <p className="text-xs text-muted-foreground">Task mới luôn là task bắt buộc.</p>}
           </div>
           <DialogFooter>
             <Button type="submit" disabled={pending}>

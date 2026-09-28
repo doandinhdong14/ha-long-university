@@ -161,15 +161,14 @@ export async function xoaNhiemVu(id: string) {
 
 // ───────────────────────── Task ─────────────────────────
 
+// v1.6 (mục 3): không còn chọn loại task – task mới luôn là Bắt buộc; task cũ giữ nguyên loại khi sửa chữ.
 const Task = z.object({
   ten: z.string().trim().min(1, "Vui lòng nhập tên task.").max(200),
   moTa: z.string().trim().max(2000).optional().transform((s) => s || null),
-  loai: z.enum(["BAT_BUOC", "MO_RONG"], { message: "Loại task không hợp lệ." }),
   thuTu: z.coerce.number().int().min(0).max(10000).default(0),
 });
 
-const LOI_THEM_BAT_BUOC =
-  "Nhiệm vụ đã có danh sách đăng ký được duyệt, không thể thêm task bắt buộc (task mở rộng vẫn thêm được).";
+const LOI_THEM_BAT_BUOC = "Nhiệm vụ đã có danh sách đăng ký được duyệt, không thể thêm task bắt buộc.";
 
 export async function themTask(input: { nhiemVuId: string } & z.input<typeof Task>) {
   return hanhDong(async () => {
@@ -179,8 +178,8 @@ export async function themTask(input: { nhiemVuId: string } & z.input<typeof Tas
       const nv = await tx.nhiemVu.findUnique({ where: { id: input.nhiemVuId } });
       if (!nv) throw new LoiNghiepVu("Nhiệm vụ không tồn tại.", 404);
       await layKyChuaChot(tx, nv.kyId);
-      if (d.loai === "BAT_BUOC" && (await nhiemVuDaCoDangKyDuyet(tx, nv.id))) throw new LoiNghiepVu(LOI_THEM_BAT_BUOC, 409);
-      await tx.task.create({ data: { ...d, nhiemVuId: nv.id } });
+      if (await nhiemVuDaCoDangKyDuyet(tx, nv.id)) throw new LoiNghiepVu(LOI_THEM_BAT_BUOC, 409);
+      await tx.task.create({ data: { ...d, loai: "BAT_BUOC", nhiemVuId: nv.id } });
     });
   });
 }
@@ -193,14 +192,6 @@ export async function suaTask(input: { id: string } & z.input<typeof Task>) {
       const t = await tx.task.findUnique({ where: { id: input.id }, include: { nhiemVu: true } });
       if (!t) throw new LoiNghiepVu("Task không tồn tại.", 404);
       await layKyChuaChot(tx, t.nhiemVu.kyId);
-      if (t.loai !== d.loai) {
-        if (await taskDaCoNguoiLam(tx, t.id)) {
-          throw new LoiNghiepVu("Task đã có người làm hoặc xin làm, không thể đổi loại (chỉ sửa được chữ).", 409);
-        }
-        if (d.loai === "BAT_BUOC" && (await nhiemVuDaCoDangKyDuyet(tx, t.nhiemVuId))) {
-          throw new LoiNghiepVu(LOI_THEM_BAT_BUOC, 409);
-        }
-      }
       await tx.task.update({ where: { id: t.id }, data: d });
     });
   });
