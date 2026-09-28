@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Info, Lightbulb } from "lucide-react";
 import type { DoiTuong, LoaiTask, TrangThaiTask } from "@/generated/prisma/enums";
 import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
-import { BieuDoTron } from "@/components/kpi/bieu-do-tron";
+import { HaiBieuDoKpi } from "@/components/kpi/bieu-do-kpi";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { KetQuaTinh } from "@/lib/ket-qua";
@@ -32,7 +32,10 @@ export function ChuaDuyetDanhSach({ kyId }: { kyId: string }) {
   );
 }
 
-/** Thẻ tổng quan task bắt buộc: biểu đồ tròn, xếp loại đăng ký, task vượt. */
+/**
+ * Thẻ tổng quan KPI (spec-v1.6 mục 5): hai biểu đồ tròn "Đánh giá của cấp trên" và "Tự đánh giá" (vòng ngoài +10%
+ * cải tiến, dòng tách "Bắt buộc X% · Cải tiến +10%"), xếp loại đăng ký. Không còn nhãn "+N task vượt".
+ */
 export function TongQuanTask({
   kq,
   xepLoai,
@@ -41,18 +44,18 @@ export function TongQuanTask({
 }: {
   kq: KetQuaTinh;
   xepLoai: string | null;
-  /** Dòng số liệu đầu cột bên phải (vd số task đang treo). */
-  dongDau: React.ReactNode;
+  /** Dòng số liệu đầu cột bên phải (vd số task đã chốt). */
+  dongDau?: React.ReactNode;
   /** Thêm ở cuối cột bên phải (vd đếm ngược deadline). */
   children?: React.ReactNode;
 }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Tổng quan task bắt buộc</CardTitle>
+        <CardTitle className="text-base">Tổng quan KPI</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-wrap items-center justify-between gap-6">
-        <BieuDoTron tk={kq.thongKe} phanTram={kq.phanTram} />
+      <CardContent className="grid items-center gap-6 xl:grid-cols-[1fr_auto]">
+        <HaiBieuDoKpi kq={kq} />
         <div className="space-y-3">
           {dongDau}
           <div>
@@ -61,11 +64,6 @@ export function TongQuanTask({
               {xepLoai}
             </div>
           </div>
-          {kq.taskVuot.length > 0 && (
-            <Badge className="bg-primary text-primary-foreground" data-testid="task-vuot">
-              +{kq.taskVuot.length} task vượt
-            </Badge>
-          )}
           {children}
         </div>
       </CardContent>

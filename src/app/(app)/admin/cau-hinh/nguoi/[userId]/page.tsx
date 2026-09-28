@@ -6,7 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import type { DoiTuong } from "@/generated/prisma/enums";
 import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
 import { TrangTieuDe } from "@/components/chung/trang-tieu-de";
-import { BieuDoTron } from "@/components/kpi/bieu-do-tron";
+import { HaiBieuDoKpi } from "@/components/kpi/bieu-do-kpi";
 import { LichSuNop } from "@/components/kpi/lich-su-nop";
 import { NhatKyTask } from "@/components/kpi/nhat-ky-task";
 import { Badge } from "@/components/ui/badge";
@@ -54,8 +54,8 @@ export default async function TrangTienDoMotNguoi(props: PageProps<"/admin/cau-h
       </div>
 
       <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-6">
-          <BieuDoTron tk={kq.thongKe} phanTram={kq.phanTram} />
+        <CardContent className="grid items-center gap-6 xl:grid-cols-[1fr_auto]">
+          <HaiBieuDoKpi kq={kq} />
           <div className="space-y-1 text-sm">
             <div>
               Đăng ký:{" "}

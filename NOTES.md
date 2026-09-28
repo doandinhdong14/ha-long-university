@@ -520,3 +520,19 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 **Test cũ sửa theo hành vi mới**
 - `src/lib/ket-qua.test.ts`: viết lại theo công thức mục 4 (bỏ các test "task mở rộng đã chốt → Vượt", "không có task bắt buộc → 100%", hiển thị "14,3%").
 - `tests/kich-ban-15.int.test.ts` → `tests/kich-ban.int.test.ts`: kịch bản mục 15 (v1.4, có task Mở rộng, xếp loại C/B) thay bằng kịch bản mục 12.1 (cả 6 người A1; Không đạt 50%/50%; Đạt 100%/100%; Vượt 110%/110% ×2; Đạt 100%/110% + ghi chú; Đạt 100%/100%), case treo (không còn "Đã duyệt nhưng chưa gửi lên"), sau chốt kỳ bị khóa (thử Duyệt thay cho Gửi lên), nhắc việc không còn "chưa gửi lên".
+
+## v1.6 – Bước 7: Hai biểu đồ + vòng ngoài + dòng tách (mục 5) ✅
+
+**Đã làm**
+- `src/components/kpi/bieu-do-kpi.tsx`: **một component dùng chung** `BieuDoKpi` (Recharts, 2 lớp `Pie`: vòng trong + vòng ngoài) và `HaiBieuDoKpi` (2 biểu đồ cạnh nhau `md:grid-cols-2`, xếp dọc trên điện thoại):
+  - trái **"Đánh giá của cấp trên"**: vòng trong giữ 5 phần (Đã chốt / Đang treo / Chờ duyệt / Bị từ chối / Chưa làm), giữa là `phanTram`, dòng "Đang treo: N task"
+  - phải **"Tự đánh giá"**: 2 phần Đã nộp (mọi trạng thái khác Chưa làm) / Chưa nộp, giữa là `tuDanhGia`, ghi "Chỉ để tham khảo"
+  - **vòng ngoài +10%** (đủ 360°) chỉ khi có đăng ký cải tiến: cấp trên tô vàng khi cải tiến đã chốt, tự đánh giá tô vàng khi đã nộp, còn lại xám nhạt; chú thích + tooltip "Cải tiến sáng tạo +10% – <đã chốt / chưa chốt / đã nộp / chưa nộp>"
+  - **dòng tách** dưới mỗi biểu đồ: "Bắt buộc X% · Cải tiến +10%" / "· Cải tiến: chưa chốt" / "· Cải tiến: chưa nộp"; không đăng ký → "Bắt buộc X%"
+  - bỏ nhãn "+N task vượt"
+- Dùng ở: Trong kỳ và Cuối kỳ (thẻ "Tổng quan KPI"), **trang chi tiết một người ở màn hình Duyệt** (mới), trang tiến độ một người của admin (thay `bieu-do-tron.tsx` cũ, đã xóa).
+- Test: E2E `e2e/v16-07-bieu-do.spec.ts` 7/7 — case mục 12.2 (10 task 3/2/1/4 → 30% / 60%; 90% + cải tiến đã chốt → 100% + dòng tách; không đăng ký → không vòng ngoài, không khối Cải tiến; cải tiến đã nộp chưa chốt → vòng Tự đánh giá tô màu, Cấp trên xám; cạnh nhau ở 1400px, xếp dọc ở 390px; người duyệt mở chi tiết thấy 2 biểu đồ) + kết quả sau chốt kỳ (Không đạt – A1 với 100% "(Bắt buộc 90% · Cải tiến +10%)", Vượt chỉ tiêu – A1 (110%), Đạt – A1, Đạt + ghi chú cải tiến chưa chốt). Đã chụp màn hình kiểm tra bằng mắt (máy tính + điện thoại).
+
+**Tự chọn**
+- Màu vòng ngoài vàng `#eab308` (cùng tông "Vượt chỉ tiêu"), màu "Đã nộp" xanh da trời `#0ea5e9` (không dùng xanh lá, theo quy ước giao diện).
+- Tiêu đề thẻ tổng quan đổi "Tổng quan task bắt buộc" → "Tổng quan KPI" vì có thêm phần cải tiến.

@@ -5,12 +5,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { TrangTieuDe } from "@/components/chung/trang-tieu-de";
+import { HaiBieuDoKpi } from "@/components/kpi/bieu-do-kpi";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChonKy } from "@/components/chung/chon-ky";
 import { yeuCauVaiTro } from "@/lib/auth/dal";
 import { tenDonVi } from "@/lib/co-cau";
 import { TEN_VAI_TRO } from "@/lib/roles";
 import { layCoCau } from "@/lib/services/co-cau";
 import { layNguoiDuocDuyet } from "@/lib/services/duyet";
+import { taiKetQua } from "@/lib/services/ket-qua";
 import { dsChonKy, layKyTheoUrl } from "@/lib/services/ky";
 import { cn } from "@/lib/utils";
 import { TabDangKy } from "./tab-dang-ky";
@@ -32,6 +35,8 @@ export default async function TrangDuyetMotNguoi(props: PageProps<"/duyet/[nguoi
   const tab: Tab = TABS.some((t) => t.id === sp.tab) ? (sp.tab as Tab) : "dang-ky";
   const { kys, ky } = await layKyTheoUrl(sp.kyId);
   const cc = await layCoCau();
+  // v1.6 (mục 5): người duyệt mở chi tiết một người thấy đủ 2 biểu đồ (cấp trên, tự đánh giá).
+  const kq = ky ? (await taiKetQua(ky.id, [nguoi])).get(nguoi.id) : undefined;
 
   return (
     <div className="space-y-6">
@@ -54,6 +59,16 @@ export default async function TrangDuyetMotNguoi(props: PageProps<"/duyet/[nguoi
         <p className="text-muted-foreground">Chưa có kỳ nào được công bố.</p>
       ) : (
         <>
+          {kq && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Tổng quan KPI</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HaiBieuDoKpi kq={kq} />
+              </CardContent>
+            </Card>
+          )}
           <nav className="flex flex-wrap gap-1 border-b" aria-label="Các tab">
             {TABS.map((t) => (
               <Link

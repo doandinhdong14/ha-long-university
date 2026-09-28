@@ -90,15 +90,7 @@ function NoiDungTrongKy(props: {
         </div>
       )}
 
-      <TongQuanTask
-        kq={kq}
-        xepLoai={props.xepLoai}
-        dongDau={
-          <div className="text-sm" data-testid="dang-treo">
-            Đang treo: <strong>{kq.soTreo}</strong> task
-          </div>
-        }
-      >
+      <TongQuanTask kq={kq} xepLoai={props.xepLoai}>
         {!props.daChot && <DemNguoc den={props.deadlineIso} nhan="Còn lại đến deadline" />}
       </TongQuanTask>
 
