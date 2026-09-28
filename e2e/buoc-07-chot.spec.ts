@@ -19,15 +19,14 @@ async function thaoTacChotUi(page: Page, nguoiChot: string, task: string, nut: s
   await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
-test("chuẩn bị: GV đăng ký, nộp 3 task; TBM duyệt 3, gửi lên 2", async ({ page }) => {
-  await dangKyUi(page, "gv.tranthibinh", ["Biên soạn bài giảng"], "Gửi lên trưởng bộ môn");
+test("chuẩn bị: GV đăng ký, nộp 3 task; TBM duyệt 2 (v1.6: duyệt là lên Chờ chốt), 1 còn chờ duyệt", async ({ page }) => {
+  await dangKyUi(page, "gv.tranthibinh", "Gửi lên trưởng bộ môn");
   await duyetDangKyUi(page, "tbm.phamthibich", "gv.tranthibinh");
   for (const t of [T1, T2, T3]) await nopUi(page, "gv.tranthibinh", t);
-  for (const t of [T1, T2, T3]) await thaoTacDuyetUi(page, "tbm.phamthibich", "gv.tranthibinh", t, "Duyệt");
-  for (const t of [T1, T2]) await thaoTacDuyetUi(page, "tbm.phamthibich", "gv.tranthibinh", t, "Gửi lên trưởng khoa");
+  for (const t of [T1, T2]) await thaoTacDuyetUi(page, "tbm.phamthibich", "gv.tranthibinh", t, "Duyệt");
 });
 
-test("TK: màn hình Chốt chỉ thấy task đã gửi lên, mặc định Chờ chốt", async ({ page }) => {
+test("TK: màn hình Chốt chỉ thấy task đã được duyệt, mặc định Chờ chốt", async ({ page }) => {
   await dangNhap(page, "tk.levankhoa");
   await page.goto("/chot");
   await expect(page.getByRole("heading", { name: "Chốt task giáo viên" })).toBeVisible();
@@ -43,7 +42,7 @@ test("TK chốt → GV thấy Đã chốt, % tăng", async ({ page }) => {
   await dangNhap(page, "gv.tranthibinh");
   await page.goto("/trong-ky");
   await expect(page.getByTestId("phan-tram")).toHaveText("0%");
-  await expect(page.getByTestId("dang-treo")).toContainText("Đang treo: 3 task");
+  await expect(page.getByTestId("dang-treo")).toContainText("Đang treo: 2 task");
   // Cuối kỳ chưa có gì vì chưa task nào được chốt.
   await page.goto("/cuoi-ky");
   await expect(page.getByTestId("danh-sach-trong")).toBeVisible();
@@ -55,7 +54,8 @@ test("TK chốt → GV thấy Đã chốt, % tăng", async ({ page }) => {
   await dangNhap(page, "gv.tranthibinh");
   await page.goto("/trong-ky");
   await expect(page.locator(`[data-task="${T1}"]`)).toContainText("Đã chốt – hoàn thành");
-  await expect(page.getByTestId("phan-tram")).toHaveText("33,3%");
+  // v1.6: đăng ký đủ 10 nhiệm vụ (22 task bắt buộc) → 1/22 ≈ 5%.
+  await expect(page.getByTestId("phan-tram")).toHaveText("5%");
 });
 
 test("Cuối kỳ: chỉ hiện task đã chốt; chi tiết quay lại Cuối kỳ; link cũ /cuoi-ky/task chuyển sang Trong kỳ", async ({ page }) => {
@@ -63,7 +63,7 @@ test("Cuối kỳ: chỉ hiện task đã chốt; chi tiết quay lại Cuối k
   await page.goto("/cuoi-ky");
   await expect(page.getByRole("heading", { name: "Cuối kỳ" })).toBeVisible();
   await expect(page.getByTestId("so-da-chot")).toContainText("Đã chốt: 1 task");
-  await expect(page.getByTestId("phan-tram")).toHaveText("33,3%");
+  await expect(page.getByTestId("phan-tram")).toHaveText("5%");
   await expect(page.locator("[data-task]")).toHaveCount(1);
   await expect(page.locator(`[data-task="${T1}"]`)).toContainText("Đã chốt – hoàn thành");
 
@@ -106,7 +106,7 @@ test("TK trả về → TBM thấy nhận xét, GV chỉ thấy trạng thái �
   await expect(page.getByTestId("lich-su-nop")).toContainText("Bổ sung trang bìa rồi nộp lại");
 });
 
-test("người chốt mở link task chưa gửi lên → không thấy", async ({ page }) => {
+test("người chốt mở link task chưa được duyệt → không thấy", async ({ page }) => {
   await dangNhap(page, "tk.levankhoa");
   await page.goto("/chot?loc=tat-ca");
   await expect(page.locator(`tr[data-task="${T3}"]`)).toHaveCount(0);

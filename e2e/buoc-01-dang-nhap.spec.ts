@@ -3,11 +3,11 @@ import { dangNhap, menu, resetDb } from "./helpers";
 
 test.beforeAll(async () => resetDb());
 
-// Bảng 2.1: mỗi vai trò đúng các mục menu, trang chủ = mục đầu tiên.
+// Bảng 2.1: mỗi vai trò đúng các mục menu, trang chủ = mục đầu tiên. v1.6: HP, HT có "Theo dõi kết quả đã chốt".
 const TAI_KHOAN: [string, string, string[]][] = [
   ["admin.quantri", "/admin/tai-khoan", ["Quản lý đăng nhập", "Phân việc đầu kỳ", "Nhận chỉ thị của hiệu trưởng", "Xem cấu hình"]],
-  ["ht.nguyenvanhieu", "/chot", ["Chốt task trưởng khoa", "Duyệt & chốt hiệu phó", "Ban hành quy định", "Xuất báo cáo"]],
-  ["hp.tranthiphuong", "/dau-ky", ["Đầu kỳ", "Trong kỳ", "Cuối kỳ", "Duyệt trưởng khoa", "Chốt task trưởng bộ môn", "Xuất báo cáo", "Nhận giấy tờ"]],
+  ["ht.nguyenvanhieu", "/chot", ["Chốt task trưởng khoa", "Duyệt & chốt hiệu phó", "Theo dõi kết quả đã chốt", "Ban hành quy định", "Xuất báo cáo"]],
+  ["hp.tranthiphuong", "/dau-ky", ["Đầu kỳ", "Trong kỳ", "Cuối kỳ", "Duyệt trưởng khoa", "Chốt task trưởng bộ môn", "Theo dõi kết quả đã chốt", "Xuất báo cáo", "Nhận giấy tờ"]],
   ["tk.levankhoa", "/dau-ky", ["Đầu kỳ", "Trong kỳ", "Cuối kỳ", "Duyệt trưởng bộ môn", "Chốt task giáo viên", "Xuất báo cáo", "Nhận giấy tờ"]],
   ["tbm.phamthibich", "/dau-ky", ["Đầu kỳ", "Trong kỳ", "Cuối kỳ", "Duyệt giáo viên", "Xuất báo cáo", "Nhận giấy tờ"]],
   ["gv.nguyenvanan", "/dau-ky", ["Đầu kỳ", "Trong kỳ", "Cuối kỳ", "Nhận giấy tờ"]],
@@ -39,11 +39,11 @@ test("sai mật khẩu → báo lỗi tiếng Việt", async ({ page }) => {
 
 // Chặn route theo vai trò (ở server, trong page).
 const CHAN: [string, string[]][] = [
-  ["gv.nguyenvanan", ["/admin/tai-khoan", "/duyet", "/chot", "/bao-cao", "/quy-dinh"]],
-  ["tbm.phamthibich", ["/chot", "/quy-dinh", "/admin/phan-viec"]],
+  ["gv.nguyenvanan", ["/admin/tai-khoan", "/duyet", "/chot", "/bao-cao", "/quy-dinh", "/theo-doi"]],
+  ["tbm.phamthibich", ["/chot", "/quy-dinh", "/admin/phan-viec", "/theo-doi"]],
   ["hp.tranthiphuong", ["/quy-dinh", "/admin/cau-hinh"]],
   ["ht.nguyenvanhieu", ["/dau-ky", "/trong-ky", "/cuoi-ky", "/giay-to", "/admin/tai-khoan"]],
-  ["admin.quantri", ["/dau-ky", "/duyet", "/chot", "/bao-cao", "/giay-to", "/quy-dinh"]],
+  ["admin.quantri", ["/dau-ky", "/duyet", "/chot", "/bao-cao", "/giay-to", "/quy-dinh", "/theo-doi"]],
 ];
 
 for (const [username, urls] of CHAN) {

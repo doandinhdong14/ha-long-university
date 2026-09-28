@@ -1,4 +1,5 @@
-// Nghiệm thu mục 15 – CASE PHỤ: XUẤT BÁO CÁO. File được tải qua giao diện /bao-cao rồi đọc nội dung.
+// Nghiệm thu – CASE PHỤ: XUẤT BÁO CÁO (mục 15 v1.4 + spec-v1.6 mục 6.3, 12.6). File được tải qua giao diện /bao-cao
+// rồi đọc nội dung.
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import ExcelJS from "exceljs";
@@ -14,6 +15,7 @@ import {
   idNguoi,
   lamChuoi,
   moTaskChot,
+  nop,
   sql,
   taiBaoCao,
   taskCua,
@@ -65,23 +67,25 @@ test.beforeAll(async () => {
   }
 });
 
-test("chuẩn bị: GV Bình 3 task (1 đã chốt, 1 chờ chốt, 1 đã duyệt); TBM, TK, HP được duyệt danh sách", async ({ page }) => {
+test("chuẩn bị: GV Bình (có cải tiến) 22 task: 1 đã chốt, 1 chờ chốt, 1 chờ duyệt; TBM, TK, HP được duyệt danh sách", async ({ page }) => {
   test.setTimeout(180_000);
   const kyId = await idKy();
-  await dangKyVaGui(page, "gv.tranthibinh", "GV", 1, /^Gửi lên trưởng bộ môn$/);
+  const A1: [string, string] = ["100", "A1"];
+  await dangKyVaGui(page, "gv.tranthibinh", /^Gửi lên trưởng bộ môn$/, { soNhiemVu: 10, diem: A1, caiTien: true });
   await duyetDangKy(page, "tbm.phamthibich", "gv.tranthibinh");
   const [a, b, c] = await taskCua("gv.tranthibinh", "BAT_BUOC");
   await lamChuoi(page, { lam: "gv.tranthibinh", duyet: "tbm.phamthibich", chot: "tk.levankhoa", ids: [a.id], den: "DA_CHOT", kyId });
   await lamChuoi(page, { lam: "gv.tranthibinh", duyet: "tbm.phamthibich", chot: "tk.levankhoa", ids: [b.id], den: "CHO_CHOT", kyId });
-  await lamChuoi(page, { lam: "gv.tranthibinh", duyet: "tbm.phamthibich", chot: "tk.levankhoa", ids: [c.id], den: "DA_DUYET", kyId });
+  await dangNhap(page, "gv.tranthibinh");
+  await nop(page, c.id);
   await dangNhap(page, "tk.levankhoa");
   await moTaskChot(page, kyId, b.id);
   await expect(page.getByTestId("nut-thao-tac")).toBeVisible();
-  await dangKyVaGui(page, "tbm.phamthibich", "TBM", 1, /^Gửi lên trưởng khoa$/);
+  await dangKyVaGui(page, "tbm.phamthibich", /^Gửi lên trưởng khoa$/, { soNhiemVu: 6, diem: A1 });
   await duyetDangKy(page, "tk.levankhoa", "tbm.phamthibich");
-  await dangKyVaGui(page, "tk.levankhoa", "TK", 1, /^Gửi lên hiệu phó$/);
+  await dangKyVaGui(page, "tk.levankhoa", /^Gửi lên hiệu phó$/, { soNhiemVu: 5, diem: A1 });
   await duyetDangKy(page, "hp.tranthiphuong", "tk.levankhoa");
-  await dangKyVaGui(page, "hp.tranthiphuong", "HP", 1, /^Gửi lên hiệu trưởng$/);
+  await dangKyVaGui(page, "hp.tranthiphuong", /^Gửi lên hiệu trưởng$/, { soNhiemVu: 5, diem: A1 });
   await duyetDangKy(page, "ht.nguyenvanhieu", "hp.tranthiphuong");
 });
 
@@ -121,35 +125,58 @@ test("TBM chỉ xuất được GV bộ môn; TK xuất GV + TBM; HP xuất GV +
   expect((await page.request.get(`/api/bao-cao?kyId=${kyId}&viTri=GV&dinhDang=xlsx`)).status()).toBe(403);
 });
 
-test("Excel đủ 3 sheet, có cột Chức vụ, Đơn vị; % chỉ đếm task đã chốt", async ({ page }) => {
+test("Excel đủ 3 sheet, có cột Chức vụ, Đơn vị và các cột mới v1.6; % đúng công thức mục 4", async ({ page }) => {
   await moBaoCao(page, "tk.levankhoa");
   const { duongDan } = await taiBaoCao(page, "Xuất Excel", "tk.xlsx");
   const wb = await docExcel(duongDan);
   expect(wb.worksheets.map((w) => w.name)).toEqual(["Đăng ký nhiệm vụ", "Kết quả", "Chi tiết task"]);
   const cot = (ten: string) => (wb.getWorksheet(ten)!.getRow(4).values as unknown[]).slice(1).map(String);
-  expect(cot("Đăng ký nhiệm vụ")).toEqual(expect.arrayContaining(["Chức vụ", "Đơn vị"]));
-  expect(cot("Kết quả")).toEqual(expect.arrayContaining(["Chức vụ", "Đơn vị", "% hoàn thành", "Task còn thiếu (kèm lý do)", "Số task đang treo", "Tình trạng"]));
-  expect(cot("Chi tiết task")).toEqual(expect.arrayContaining(["Chức vụ", "Được tính (Có/Không)", "Nhận xét của người chốt"]));
+  expect(cot("Đăng ký nhiệm vụ")).toEqual(expect.arrayContaining(["Chức vụ", "Đơn vị", "Đăng ký cải tiến (Có/Không)"]));
+  expect(cot("Kết quả")).toEqual(
+    expect.arrayContaining([
+      "Chức vụ",
+      "Đơn vị",
+      "Đánh giá cấp trên %",
+      "% bắt buộc",
+      "Tự đánh giá %",
+      "Task còn thiếu (kèm lý do)",
+      "Số task đang treo",
+      "Cải tiến sáng tạo",
+      "Tình trạng",
+    ]),
+  );
+  expect(cot("Kết quả")).not.toContain("% hoàn thành");
+  expect(cot("Kết quả")).not.toContain("Task vượt");
+  expect(cot("Chi tiết task")).toEqual(expect.arrayContaining(["Chức vụ", "Loại", "Được tính (Có/Không)", "Nhận xét của người chốt"]));
 
   const binh = dongDuLieu(wb.getWorksheet("Kết quả")!).find((d) => d[1] === "Trần Thị Bình")!;
-  // 3 task bắt buộc: 1 đã chốt, 1 chờ chốt, 1 đã duyệt → 33,3% (task treo không được tính), 2 task đang treo.
-  expect(binh.slice(2, 9)).toEqual([
+  // 22 task bắt buộc: 1 đã chốt (5%), 3 đã nộp (14%); cải tiến chưa nộp; 1 task đang treo (chờ chốt).
+  expect(binh.slice(2, 12)).toEqual([
     "Giáo viên",
     "Bộ môn Khoa học máy tính",
-    "33,3%",
+    "5%",
+    "5%",
+    "14%",
     "Không đạt",
-    "F",
+    "A1",
     expect.stringContaining("Chờ chốt, chưa được chốt kịp"),
-    2,
+    1,
+    "Chưa chốt",
   ]);
   const chiTiet = dongDuLieu(wb.getWorksheet("Chi tiết task")!).filter((d) => d[1] === "Trần Thị Bình");
-  expect(chiTiet.map((d) => [d[6], d[7]])).toEqual([
+  expect(chiTiet).toHaveLength(23);
+  expect(chiTiet.slice(0, 3).map((d) => [d[6], d[7]])).toEqual([
     ["Đã chốt", "Có"],
     ["Chờ chốt", "Không"],
-    ["Đã duyệt, chưa gửi lên", "Không"],
+    ["Chờ duyệt", "Không"],
   ]);
-  const tbm = dongDuLieu(wb.getWorksheet("Đăng ký nhiệm vụ")!).find((d) => d[1] === "Phạm Thị Bích")!;
+  expect(chiTiet.map((d) => d[5]).at(-1)).toBe("Cải tiến sáng tạo");
+  expect(new Set(chiTiet.slice(0, 22).map((d) => d[5]))).toEqual(new Set(["Bắt buộc"]));
+  const dk = dongDuLieu(wb.getWorksheet("Đăng ký nhiệm vụ")!);
+  const tbm = dk.find((d) => d[1] === "Phạm Thị Bích")!;
   expect(tbm.slice(3, 6)).toEqual(["Trưởng bộ môn", "Bộ môn Khoa học máy tính", "Đã duyệt"]);
+  expect(tbm.at(-1)).toBe("Không");
+  expect(dk.find((d) => d[1] === "Trần Thị Bình")!.at(-1)).toBe("Có");
 });
 
 test("PDF đúng khối chữ ký theo người xuất (HP: \"KT. HIỆU TRƯỞNG / PHÓ HIỆU TRƯỞNG\"), tiếng Việt không lỗi font", async ({ page }) => {
@@ -175,9 +202,11 @@ test("PDF đúng khối chữ ký theo người xuất (HP: \"KT. HIỆU TRƯỞ
       "(Ký, ghi rõ họ tên)",
       ...chuKy,
       ...donVi,
+      "Cải tiến sáng tạo", // v1.6: thay cột "Task vượt"
     ]) {
       expect(chu, `${u}: ${s}`).toContain(s);
     }
+    expect(chu, u).not.toContain("Task vượt");
     expect(chu).toMatch(/Quảng Ninh, ngày \d{2} tháng \d{2} năm \d{4}/);
     if (u === "ht.nguyenvanhieu") expect(chu).not.toContain("PHÓ HIỆU TRƯỞNG");
     if (u !== "tbm.phamthibich") expect(chu).not.toContain("BỘ MÔN KHOA HỌC MÁY TÍNH");
@@ -191,7 +220,7 @@ test("kỳ chưa chốt: ghi \"TẠM TÍNH\"; sau chốt thì không còn", asyn
   expect(x1.tenFile).toMatch(/_TamTinh\.xlsx$/);
   const kq1 = (await docExcel(x1.duongDan)).getWorksheet("Kết quả")!;
   expect(String(kq1.getCell("A1").value)).toContain("(TẠM TÍNH)");
-  expect(dongDuLieu(kq1)[0][10]).toBe("Tạm tính");
+  expect(dongDuLieu(kq1)[0][12]).toBe("Tạm tính");
   const p1 = await taiBaoCao(page, "Xuất PDF", "tam-tinh.pdf");
   expect(p1.tenFile).toMatch(/_TamTinh\.pdf$/);
   expect(await chuTrongPdf(p1.duongDan)).toContain("(TẠM TÍNH)");
@@ -204,8 +233,8 @@ test("kỳ chưa chốt: ghi \"TẠM TÍNH\"; sau chốt thì không còn", asyn
   expect(x2.tenFile).not.toContain("TamTinh");
   const kq2 = (await docExcel(x2.duongDan)).getWorksheet("Kết quả")!;
   expect(String(kq2.getCell("A1").value)).not.toContain("TẠM TÍNH");
-  expect(dongDuLieu(kq2).every((d) => d[10] === "Đã chốt kỳ")).toBe(true);
-  expect(dongDuLieu(kq2).find((d) => d[1] === "Trần Thị Bình")![4]).toBe("33,3%");
+  expect(dongDuLieu(kq2).every((d) => d[12] === "Đã chốt kỳ")).toBe(true);
+  expect(dongDuLieu(kq2).find((d) => d[1] === "Trần Thị Bình")![4]).toBe("5%");
   const p2 = await taiBaoCao(page, "Xuất PDF", "da-chot.pdf");
   expect(p2.tenFile).not.toContain("TamTinh");
   expect(await chuTrongPdf(p2.duongDan)).not.toContain("TẠM TÍNH");

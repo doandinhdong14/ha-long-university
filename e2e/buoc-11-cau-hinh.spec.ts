@@ -29,13 +29,14 @@ test("cảnh báo đơn vị thiếu người: khoa chưa có hiệu phó", asyn
   await dangNhap(page, "tk.levankhoa");
   await page.goto("/dau-ky");
   await expect(page.getByTestId("thieu-nguoi")).toContainText("Chưa có hiệu phó phụ trách, vui lòng liên hệ admin.");
-  await page.getByLabel("Chọn Quản lý đào tạo của khoa").check();
+  // v1.6: nhiệm vụ đã tick sẵn (bắt buộc); nút Gửi vẫn bị chặn vì thiếu người.
+  await expect(page.getByLabel("Chọn Quản lý đào tạo của khoa")).toBeChecked();
   await expect(page.getByRole("button", { name: "Gửi lên hiệu phó" })).toBeDisabled();
   await sql(`UPDATE "Khoa" SET "hieuPhoId" = (SELECT id FROM "User" WHERE username = 'hp.tranthiphuong')`);
 });
 
 test("chuông: số chưa đọc, bấm vào đi tới trang liên quan và đánh dấu đã đọc", async ({ page }) => {
-  await dangKyUi(page, "gv.levancuong", ["Cố vấn học tập"], "Gửi lên trưởng bộ môn");
+  await dangKyUi(page, "gv.levancuong", "Gửi lên trưởng bộ môn");
   await dangNhap(page, "tbm.phamthibich");
   await expect(page.getByTestId("so-chua-doc")).toHaveText("1");
   await page.getByRole("button", { name: "Thông báo" }).click();

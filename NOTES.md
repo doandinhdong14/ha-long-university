@@ -573,3 +573,46 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 ## v1.6 – Bước 10: Cập nhật config menu Admin "Phân hệ mở rộng" v1.5 (mục 10) ✅
 
 - Đã có v1.5 (`src/lib/admin-phan-he.ts`). Mục **2.3 Quy đổi sáng kiến / cải tiến / đề tài**: `trangThai: "MOT_PHAN"`, `ghiChu: "Hiện đã có Đăng ký cải tiến sáng tạo (+10%) theo mẫu Phụ lục IV. Quy đổi sang điểm sẽ bổ sung ở giai đoạn sau."`. Không thêm liên kết (mục 10 chỉ nêu 2 trường).
+
+## v1.6 – Bước 11: Nghiệm thu mục 12 + sửa test cũ bị ảnh hưởng ✅
+
+**Kết quả chạy (28/09/2026, DB test seed lại từ đầu, build production):** typecheck + lint sạch; unit **63/63**; tích hợp **98/98**; E2E **146/146** (gồm bộ nghiệm thu `e2e/nghiem-thu/` và các file `e2e/v16-*`). Lượt E2E đầu có 1 test hỏng (`6-chung` › quyền `/api/files/[id]`) vì hành vi cố ý đổi ở mục 8.4 — sửa test, chạy lại file: 8/8.
+
+**Đối chiếu mục 12 → test**
+| Mục | Test |
+|---|---|
+| 12.1 kịch bản chính (6 người) | `e2e/nghiem-thu/1-kich-ban-chinh.spec.ts` (qua giao diện, chốt kỳ, kiểm tra từng tài khoản + Excel); `tests/kich-ban.int.test.ts`; `e2e/buoc-08-kich-ban-15.spec.ts` |
+| 12.2 tính toán, biểu đồ | `e2e/v16-07-bieu-do.spec.ts` (30%/60%, 90% + cải tiến = 100% Không đạt, không đăng ký, vòng ngoài, bố cục máy tính/điện thoại, chi tiết người ở Duyệt); `src/lib/ket-qua.test.ts` |
+| 12.3 đầu kỳ | `e2e/v16-05-dau-ky.spec.ts`; `tests/dang-ky.int.test.ts` (sửa tay request → vẫn đủ nhiệm vụ; tick khi Nháp, khóa khi Chờ duyệt/Đã duyệt); `tests/phan-viec.int.test.ts` (chặn API nhiệm vụ cải tiến, sao chép kỳ đúng 1 cải tiến/vị trí); `tests/kpi-task.int.test.ts` (API xin thêm → "Chức năng không còn sử dụng") |
+| 12.4 duyệt, chốt | `e2e/v16-03-duyet-len-cho-chot.spec.ts` (4 chuỗi mục 7.3, không còn Gửi lên / "Chưa gửi lên", hủy duyệt, trả về → Duyệt lại, task HP 2 nút); `e2e/nghiem-thu/2-duyet-chot.spec.ts`; `tests/chot.int.test.ts`, `tests/kpi-task.int.test.ts` |
+| 12.5 Theo dõi | `e2e/v16-09-theo-doi.spec.ts`; `tests/theo-doi.int.test.ts` (phạm vi, 50 dòng/trang, lọc, chỉ đọc, quyền file) |
+| 12.6 báo cáo, hồi quy | `tests/bao-cao.int.test.ts` + `e2e/nghiem-thu/4-bao-cao.spec.ts` (cột mới Excel, PDF "Cải tiến sáng tạo", font tiếng Việt); toàn bộ E2E bước 1–11 v1.4 (tài khoản, quy định, deadline, chốt kỳ, menu Admin) |
+
+**Test E2E cũ sửa theo hành vi mới** (không xóa test nào)
+- Bỏ Gửi lên (mục 7):
+  - `e2e/nghiem-thu/tien-ich.ts` › `lamChuoi`: bỏ bước bấm "Gửi lên …"; `"DA_DUYET"` chỉ còn dùng cho task HP.
+  - `e2e/buoc-06-cuoi-ky.spec.ts`: "GV nộp → TBM duyệt (lên Chờ chốt ngay)…, hủy duyệt, duyệt lại"; Hàng chờ chỉ còn Chờ duyệt / Bị trả về.
+  - `e2e/buoc-07-chot.spec.ts`: chuẩn bị "TBM duyệt 2, 1 còn chờ duyệt"; TK chỉ thấy task **đã được duyệt**; người chốt mở link task **chưa được duyệt** → không thấy.
+  - `e2e/nghiem-thu/2-duyet-chot.spec.ts`: người chốt chốt ngay sau khi duyệt; hủy duyệt khi chưa chốt → về Chờ duyệt, biến mất khỏi Chờ chốt; đã chốt → server chặn ("Task đã chốt, không ai sửa được."); người chốt mở được file ngay khi task được duyệt; trả làm lại → duyệt → chốt.
+  - `e2e/nghiem-thu/6-chung.spec.ts` › sửa minh chứng: bỏ bước Gửi lên trước khi TK chốt.
+- Bỏ xin thêm task (mục 3):
+  - `e2e/buoc-06-cuoi-ky.spec.ts` › "xin thêm task mở rộng → TBM duyệt → task được giao" → "không còn xin thêm task – không có khối/tab/ô xin thêm".
+  - `e2e/buoc-08-kich-ban-15.spec.ts`: kịch bản mục 15 (có task Mở rộng) → kịch bản mục 12.1.
+  - `e2e/nghiem-thu/1-kich-ban-chinh.spec.ts`: viết lại theo mục 12.1 (case "task mở rộng đã duyệt chưa chốt" bỏ; thêm case cải tiến không nằm trong task thiếu).
+- Đầu kỳ mọi nhiệm vụ bắt buộc (mục 2):
+  - `e2e/helpers.ts` › `dangKyUi(page, user, nutGui, caiTien)` và `e2e/nghiem-thu/tien-ich.ts` › `dangKyVaGui(page, user, nutGui, { soNhiemVu, diem, caiTien })`: không tick từng nhiệm vụ, chỉ chọn cải tiến; kiểm tra số nhiệm vụ / điểm / xếp loại (A1) / Cải tiến Có–Không. `duyetDangKy` kiểm tra thêm dòng "Đăng ký cải tiến sáng tạo: Có/Không". `tenNhiemVu` lọc `laCaiTien = false`.
+  - `e2e/buoc-05-dau-ky.spec.ts`: tick sẵn + khóa thay cho "thanh tổng kết cập nhật khi tick"; từ chối → sửa đăng ký cải tiến rồi gửi lại.
+  - `e2e/buoc-11-cau-hinh.spec.ts`, `e2e/nghiem-thu/3-co-cau-tai-khoan.spec.ts`: thiếu hiệu phó → nhiệm vụ đã tick sẵn, nút Gửi vẫn khóa.
+  - `e2e/nghiem-thu/6-chung.spec.ts`: bị từ chối → sửa (tick cải tiến) và gửi lại; nháp tự lưu khi tick cải tiến.
+  - Số liệu % đổi vì đăng ký đủ nhiệm vụ (GV 22 task, HP 10 task): `buoc-06`, `buoc-07`, `nghiem-thu/2`, `nghiem-thu/4` (vd 14,3% → 5%).
+- Hai biểu đồ, bảng Tổng quan, Excel (mục 5, 6): `nghiem-thu/2` đọc phần biểu đồ qua `bieu-do-cap-tren`; `buoc-06` cột "Đánh giá cấp trên %" + "Tự đánh giá %"; `nghiem-thu/4-bao-cao.spec.ts` cột mới của Excel.
+- Theo dõi kết quả đã chốt (mục 8):
+  - `e2e/buoc-01-dang-nhap.spec.ts`: menu HP, HT có "Theo dõi kết quả đã chốt"; GV, TBM, Admin gõ `/theo-doi` → bị chặn.
+  - `e2e/nghiem-thu/6-chung.spec.ts` › quyền `/api/files/[id]`: minh chứng task **đã chốt** của GV → HP, HT nay **200** (mục 8.4, trước là 403); thêm kiểm tra task **chưa chốt** → HP, HT, người chốt vẫn 403.
+- Không phải hành vi đổi, chỉ sửa bộ chọn: `e2e/helpers.ts` › `menu()` bỏ khối "Phân hệ mở rộng" (v1.5) của admin; `e2e/buoc-04-phan-viec.spec.ts` › `getByLabel("Điểm", { exact: true })` (form nhiệm vụ có thêm nhãn chứa chữ "Điểm").
+
+**Việc còn tồn**
+- **File Phụ lục IV thật** chưa có: `public/templates/` chỉ có `.gitkeep` (spec cấm tạo file giả). Trang Đầu kỳ đang hiện "Mẫu Phụ lục IV đang được cập nhật"; chủ dự án chép file vào `public/templates/phu-luc-iv.docx` là tải được ngay, không cần build lại.
+- **Production (Railway)** chưa deploy nhánh này. Khi deploy, `npm run release` chạy 2 migration v1.6 (thêm cột; chuyển task GV/TBM/TK `DA_DUYET` → `CHO_CHOT` ở kỳ chưa chốt) và seed bổ sung nhiệm vụ cải tiến cho mọi kỳ — không cần reset. Lỗi "Chờ chốt trống" chưa kiểm tra trên dữ liệu production (bước 1 tái hiện bằng seed).
+- Nhánh `feature/v1.6` chưa merge vào `main`, chưa push.
+- Cảnh báo `pg` "client.query() when the client is already executing" khi chạy test tích hợp: có từ trước, không ảnh hưởng kết quả.

@@ -23,16 +23,16 @@ export async function idKy(ten = "Kỳ 1 – 2026-2027") {
 /** Tên n nhiệm vụ đầu (theo thứ tự) của một vị trí trong kỳ seed. */
 export async function tenNhiemVu(doiTuong: string, n: number) {
   const ds = await sql<{ ten: string }>(
-    `SELECT nv.ten FROM "NhiemVu" nv JOIN "Ky" k ON k.id = nv."kyId" WHERE k.ten = 'Kỳ 1 – 2026-2027' AND nv."doiTuong" = $1 ORDER BY nv."thuTu" LIMIT $2`,
+    `SELECT nv.ten FROM "NhiemVu" nv JOIN "Ky" k ON k.id = nv."kyId" WHERE k.ten = 'Kỳ 1 – 2026-2027' AND nv."doiTuong" = $1 AND NOT nv."laCaiTien" ORDER BY nv."thuTu" LIMIT $2`,
     [doiTuong, n],
   );
   return ds.map((x) => x.ten);
 }
 
-export type TaskCuaNguoi = { id: string; ten: string; loai: "BAT_BUOC" | "MO_RONG"; trangThai: string };
+export type TaskCuaNguoi = { id: string; ten: string; loai: "BAT_BUOC" | "MO_RONG" | "CAI_TIEN"; trangThai: string };
 
 /** Task của một người: theo thứ tự nhiệm vụ, bắt buộc trước, rồi thứ tự task. */
-export async function taskCua(username: string, loai?: "BAT_BUOC" | "MO_RONG") {
+export async function taskCua(username: string, loai?: TaskCuaNguoi["loai"]) {
   return sql<TaskCuaNguoi>(
     `SELECT k.id, t.ten, t.loai::text AS loai, k."trangThai"::text AS "trangThai"
      FROM "KpiTask" k JOIN "Task" t ON t.id = k."taskId" JOIN "NhiemVu" nv ON nv.id = t."nhiemVuId"
@@ -48,29 +48,39 @@ export async function trangThaiTask(id: string) {
   return k.trangThai;
 }
 
-/** Người làm KPI tick n nhiệm vụ đầu của vị trí mình và gửi lên người duyệt. Kiểm tra điểm, xếp loại dự kiến. */
-export async function dangKyVaGui(page: Page, username: string, doiTuong: string, n: number, nutGui: RegExp, diem?: [string, string]) {
+/**
+ * Người làm KPI gửi danh sách lên người duyệt. v1.6: mọi nhiệm vụ của vị trí đã tick sẵn (khóa) – kiểm tra số nhiệm
+ * vụ, điểm, xếp loại dự kiến; chỉ chọn có đăng ký cải tiến sáng tạo hay không.
+ */
+export async function dangKyVaGui(
+  page: Page,
+  username: string,
+  nutGui: RegExp,
+  p: { soNhiemVu: number; diem: [string, string]; caiTien?: boolean },
+) {
   await dangNhap(page, username);
   await page.goto("/dau-ky");
-  for (const nv of await tenNhiemVu(doiTuong, n)) await page.getByLabel(`Chọn ${nv}`, { exact: true }).check();
-  await expect(page.getByTestId("so-nhiem-vu")).toHaveText(String(n));
-  if (diem) {
-    await expect(page.getByTestId("tong-diem")).toHaveText(diem[0]);
-    await expect(page.getByTestId("xep-loai")).toHaveText(diem[1]);
-  }
+  await expect(page.getByTestId("so-nhiem-vu")).toHaveText(String(p.soNhiemVu));
+  await expect(page.getByTestId("tong-diem")).toHaveText(p.diem[0]);
+  await expect(page.getByTestId("xep-loai")).toHaveText(p.diem[1]);
+  if (p.caiTien) await page.getByLabel("Tôi đăng ký thực hiện cải tiến sáng tạo trong kỳ này").check();
+  await expect(page.getByTestId("cai-tien")).toHaveText(p.caiTien ? "Có" : "Không");
   await page.getByRole("button", { name: nutGui }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Gửi" }).click();
   await expect(page.getByTestId("banner-trang-thai")).toContainText("Chờ duyệt");
 }
 
-/** Người duyệt mở danh sách đăng ký của người làm KPI trên màn hình Duyệt, kiểm tra điểm/xếp loại, bấm Duyệt. */
-export async function duyetDangKy(page: Page, nguoiDuyet: string, nguoiLam: string, diem?: [string, string]) {
+/** Người duyệt mở danh sách đăng ký của người làm KPI trên màn hình Duyệt, kiểm tra điểm/xếp loại/cải tiến, bấm Duyệt. */
+export async function duyetDangKy(page: Page, nguoiDuyet: string, nguoiLam: string, diem?: [string, string], caiTien?: boolean) {
   await dangNhap(page, nguoiDuyet);
   await page.goto("/duyet");
   await page.locator(`tr[data-nguoi="${nguoiLam}"]`).getByRole("link", { name: "Xem" }).click();
   if (diem) {
     await expect(page.getByTestId("tong-diem")).toHaveText(diem[0]);
     await expect(page.getByTestId("xep-loai")).toHaveText(diem[1]);
+  }
+  if (caiTien !== undefined) {
+    await expect(page.getByTestId("dang-ky-cai-tien")).toHaveText(`Đăng ký cải tiến sáng tạo: ${caiTien ? "Có" : "Không"}`);
   }
   await page.getByRole("button", { name: "Duyệt", exact: true }).click();
   await page.getByRole("button", { name: "Xác nhận duyệt" }).click();
@@ -104,8 +114,8 @@ export async function moTaskChot(page: Page, kyId: string, kpiTaskId: string) {
 }
 
 /**
- * Chạy chuỗi cho danh sách task: người làm nộp → người duyệt Duyệt → (Gửi lên | HT Chốt ngay với task HP)
- * → người chốt Chốt. `den` là trạng thái đích.
+ * Chạy chuỗi cho danh sách task: người làm nộp → người duyệt Duyệt (v1.6: task GV/TBM/TK lên Chờ chốt ngay; task HP
+ * ở Đã duyệt, HT Chốt ngay) → người chốt Chốt. `den` là trạng thái đích ("DA_DUYET" chỉ dùng cho task HP).
  */
 export async function lamChuoi(
   page: Page,
@@ -121,9 +131,7 @@ export async function lamChuoi(
   for (const id of p.ids) {
     await moTaskDuyet(page, lamId, p.kyId, id);
     await bamNut(page, "Duyệt");
-    if (p.den === "DA_DUYET") continue;
-    if (gop) await bamNut(page, "Chốt");
-    else await bamNut(page, /^Gửi lên /);
+    if (gop && p.den === "DA_CHOT") await bamNut(page, "Chốt");
   }
   if (p.den !== "DA_CHOT" || gop) return;
   await dangNhap(page, p.chot);

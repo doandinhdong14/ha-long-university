@@ -58,7 +58,8 @@ test("xóa hiệu phó → khoa thành \"chưa có hiệu phó\"; TBM và TK c�
     await dangNhap(page, u);
     await page.goto("/dau-ky");
     await expect(page.getByTestId("thieu-nguoi"), u).toHaveText("Chưa có hiệu phó phụ trách, vui lòng liên hệ admin.");
-    await page.getByLabel(`Chọn ${nhiemVu}`, { exact: true }).check();
+    // v1.6: nhiệm vụ đã tick sẵn (bắt buộc); nút Gửi vẫn bị chặn vì thiếu người.
+    await expect(page.getByLabel(`Chọn ${nhiemVu}`, { exact: true })).toBeChecked();
     await expect(page.getByRole("button", { name: nut }), u).toBeDisabled();
   }
   // GV không bị ảnh hưởng (người duyệt, người chốt của GV vẫn đủ).
@@ -80,9 +81,9 @@ test("tạo hiệu phó mới, gán khoa → luồng chạy lại bình thườn
   await expect(page.getByTestId("du-nguoi")).toBeVisible();
 
   // TK gửi đăng ký → hiệu phó mới duyệt; TBM gửi → TK duyệt (người chốt của TBM là hiệu phó mới).
-  await dangKyVaGui(page, "tk.levankhoa", "TK", 1, /^Gửi lên hiệu phó$/);
+  await dangKyVaGui(page, "tk.levankhoa", /^Gửi lên hiệu phó$/, { soNhiemVu: 5, diem: ["100", "A1"] });
   await duyetDangKy(page, "hp.hoangminhtuan", "tk.levankhoa");
-  await dangKyVaGui(page, "tbm.tranthibinh", "TBM", 1, /^Gửi lên trưởng khoa$/);
+  await dangKyVaGui(page, "tbm.tranthibinh", /^Gửi lên trưởng khoa$/, { soNhiemVu: 6, diem: ["100", "A1"] });
   await duyetDangKy(page, "tk.levankhoa", "tbm.tranthibinh");
   await dangNhap(page, "hp.hoangminhtuan");
   await page.goto("/chot");

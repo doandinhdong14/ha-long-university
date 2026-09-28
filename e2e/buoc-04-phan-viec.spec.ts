@@ -51,7 +51,7 @@ test("tạo kỳ sao chép từ kỳ trước → thêm nhiệm vụ cho trưở
   await tabs.nth(2).click();
   await page.getByRole("button", { name: "Thêm nhiệm vụ" }).click();
   await page.getByLabel("Tên nhiệm vụ").fill("Chuyển đổi số của khoa");
-  await page.getByLabel("Điểm").fill("20");
+  await page.getByLabel("Điểm", { exact: true }).fill("20");
   await page.getByRole("button", { name: "Lưu" }).click();
   await expect(page.getByText("Đã thêm nhiệm vụ.")).toBeVisible();
   await expect(tabs.nth(2)).toHaveText("Trưởng khoa (6)");

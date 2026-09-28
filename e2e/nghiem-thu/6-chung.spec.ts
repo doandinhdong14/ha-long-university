@@ -42,24 +42,31 @@ test.beforeAll(async () => {
   kyId = await idKy();
 });
 
-test("chuẩn bị (hôm nay là ngày bắt đầu kỳ): Bình gửi rồi bị từ chối; Cường được duyệt; An tick nhưng chưa gửi", async ({ page }) => {
-  await dangKyVaGui(page, "gv.tranthibinh", "GV", 1, /^Gửi lên trưởng bộ môn$/);
+test("chuẩn bị (hôm nay là ngày bắt đầu kỳ): Bình gửi rồi bị từ chối; Cường được duyệt; An tick cải tiến nhưng chưa gửi", async ({ page }) => {
+  const A1: [string, string] = ["100", "A1"];
+  await dangKyVaGui(page, "gv.tranthibinh", /^Gửi lên trưởng bộ môn$/, { soNhiemVu: 10, diem: A1 });
   await dangNhap(page, "tbm.phamthibich");
   await page.goto("/duyet");
   await page.locator('tr[data-nguoi="gv.tranthibinh"]').getByRole("link", { name: "Xem" }).click();
   await page.getByRole("button", { name: "Từ chối" }).click();
-  await page.getByLabel("Nhận xét").fill("Cần chọn thêm nhiệm vụ.");
+  await page.getByLabel("Nhận xét").fill("Cần đăng ký cải tiến sáng tạo.");
   await page.getByRole("button", { name: "Xác nhận từ chối" }).click();
   await expect(page.getByText("Đã từ chối danh sách.")).toBeVisible();
 
-  await dangKyVaGui(page, "gv.levancuong", "GV", 1, /^Gửi lên trưởng bộ môn$/);
+  await dangKyVaGui(page, "gv.levancuong", /^Gửi lên trưởng bộ môn$/, { soNhiemVu: 10, diem: A1 });
   await duyetDangKy(page, "tbm.phamthibich", "gv.levancuong");
 
+  // v1.6: nhiệm vụ đã tick sẵn; tick cải tiến là tự lưu nháp.
   await dangNhap(page, "gv.nguyenvanan");
   await page.goto("/dau-ky");
   const [nv] = await tenNhiemVu("GV", 1);
-  await page.getByLabel(`Chọn ${nv}`, { exact: true }).check();
-  await expect(page.getByTestId("so-nhiem-vu")).toHaveText("1");
+  await expect(page.getByLabel(`Chọn ${nv}`, { exact: true })).toBeChecked();
+  await page.getByLabel("Tôi đăng ký thực hiện cải tiến sáng tạo trong kỳ này").check();
+  await expect(page.getByTestId("cai-tien")).toHaveText("Có");
+  await expect(page.getByTestId("so-nhiem-vu")).toHaveText("10");
+  await expect
+    .poll(async () => (await sql(`SELECT 1 FROM "DangKy" WHERE "userId" = $1`, [await idNguoi("gv.nguyenvanan")])).length)
+    .toBe(1);
 });
 
 test("sửa ngày bắt đầu kỳ về hôm qua → người chưa gửi đăng ký không gửi được nữa (chặn ở server)", async ({ page, browser }) => {
@@ -88,15 +95,14 @@ test("sửa ngày bắt đầu kỳ về hôm qua → người chưa gửi đăn
 test("bị từ chối danh sách sau ngày bắt đầu → vẫn sửa và gửi lại được (trước deadline)", async ({ page }) => {
   await dangNhap(page, "gv.tranthibinh");
   await page.goto("/dau-ky");
-  await expect(page.getByTestId("nhan-xet")).toHaveText("Cần chọn thêm nhiệm vụ.");
-  await expect(page.getByTestId("banner-trang-thai")).toContainText("Bạn có thể sửa danh sách và gửi lại đến hết deadline");
-  const [, nv2] = await tenNhiemVu("GV", 2);
-  await page.getByLabel(`Chọn ${nv2}`, { exact: true }).check();
-  await expect(page.getByTestId("so-nhiem-vu")).toHaveText("2");
+  await expect(page.getByTestId("nhan-xet")).toHaveText("Cần đăng ký cải tiến sáng tạo.");
+  await expect(page.getByTestId("banner-trang-thai")).toContainText("Bạn có thể sửa đăng ký cải tiến và gửi lại đến hết deadline");
+  await page.getByLabel("Tôi đăng ký thực hiện cải tiến sáng tạo trong kỳ này").check();
+  await expect(page.getByTestId("cai-tien")).toHaveText("Có");
   await page.getByRole("button", { name: "Gửi lên trưởng bộ môn" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Gửi" }).click();
   await expect(page.getByTestId("banner-trang-thai")).toContainText("Chờ duyệt");
-  await duyetDangKy(page, "tbm.phamthibich", "gv.tranthibinh", ["27", "D"]);
+  await duyetDangKy(page, "tbm.phamthibich", "gv.tranthibinh", ["100", "A1"], true);
 });
 
 test("sửa minh chứng khi Chờ duyệt → được; khi đã duyệt/chốt → bị chặn (cả ở API)", async ({ page }) => {
@@ -126,9 +132,7 @@ test("sửa minh chứng khi Chờ duyệt → được; khi đã duyệt/chốt
   expect(r.status()).toBe(409);
   expect((await r.json()).error).toMatch(/không thể sửa bài nộp/);
 
-  await dangNhap(page, "tbm.phamthibich");
-  await moTaskDuyet(page, await idNguoi("gv.levancuong"), kyId, t1.id);
-  await bamNut(page, "Gửi lên trưởng khoa");
+  // v1.6: đã duyệt là task nằm ở Chờ chốt của trưởng khoa.
   await dangNhap(page, "tk.levankhoa");
   await moTaskChot(page, kyId, t1.id);
   await bamNut(page, "Chốt");
@@ -194,22 +198,32 @@ test("file > 20MB hoặc sai định dạng → báo lỗi (giao diện và serv
 });
 
 test("người không có quyền mở link /api/files/[id] → bị chặn", async ({ page, browser }) => {
-  const [t1] = await taskCua("gv.levancuong", "BAT_BUOC");
-  const [f] = await sql<{ id: string }>(
-    `SELECT f.id FROM "FileDinhKem" f JOIN "BaiNop" b ON b.id = f."baiNopId" WHERE b."kpiTaskId" = $1 LIMIT 1`,
-    [t1.id],
-  );
-  const thu = async (u: string) => {
+  const [t1, t2] = await taskCua("gv.levancuong", "BAT_BUOC"); // t1 đã chốt, t2 đang chờ duyệt
+  const fileCua = async (kpiTaskId: string) =>
+    (
+      await sql<{ id: string }>(
+        `SELECT f.id FROM "FileDinhKem" f JOIN "BaiNop" b ON b.id = f."baiNopId" WHERE b."kpiTaskId" = $1 LIMIT 1`,
+        [kpiTaskId],
+      )
+    )[0];
+  const f = await fileCua(t1.id);
+  const f2 = await fileCua(t2.id);
+  const thu = async (u: string, id = f.id) => {
     await dangNhap(page, u);
-    return (await page.request.get(`/api/files/${f.id}`)).status();
+    return (await page.request.get(`/api/files/${id}`)).status();
   };
   expect(await thu("gv.levancuong")).toBe(200); // chủ minh chứng
   expect(await thu("tbm.phamthibich")).toBe(200); // người duyệt
   expect(await thu("tk.levankhoa")).toBe(200); // người chốt (task đã chốt)
   expect(await thu("admin.quantri")).toBe(200);
   expect(await thu("gv.nguyenvanan")).toBe(403); // GV khác
-  expect(await thu("hp.tranthiphuong")).toBe(403);
-  expect(await thu("ht.nguyenvanhieu")).toBe(403);
+  // v1.6 mục 8.4: task đã chốt → HP (GV khoa mình) và HT xem được qua "Theo dõi kết quả đã chốt".
+  expect(await thu("hp.tranthiphuong")).toBe(200);
+  expect(await thu("ht.nguyenvanhieu")).toBe(200);
+  // Task chưa chốt: HP, HT vẫn bị chặn; người chốt chưa thấy vì task chưa được duyệt.
+  expect(await thu("hp.tranthiphuong", f2.id)).toBe(403);
+  expect(await thu("ht.nguyenvanhieu", f2.id)).toBe(403);
+  expect(await thu("tk.levankhoa", f2.id)).toBe(403);
   const khach = await trangMoi(browser);
   expect((await khach.request.get(`/api/files/${f.id}`)).status()).toBe(401);
   const res = await khach.goto(`/api/files/${f.id}`);

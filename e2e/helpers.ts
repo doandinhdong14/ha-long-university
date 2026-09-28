@@ -37,17 +37,22 @@ export async function dangNhap(page: Page, username: string, matKhau = "123456")
   await expect(page).not.toHaveURL(/dang-nhap/);
 }
 
-/** Danh sách nhãn menu bên trái. */
+/** Danh sách nhãn menu bên trái (menu chính theo vai trò; không gồm khối "Phân hệ mở rộng" v1.5 của admin). */
 export async function menu(page: Page): Promise<string[]> {
-  return page.locator("aside nav a").allInnerTexts();
+  return page.locator("aside nav:not([aria-label='Phân hệ mở rộng']) a").allInnerTexts();
 }
 
-/** Người làm KPI tick nhiệm vụ và gửi (qua giao diện Đầu kỳ). */
-export async function dangKyUi(page: Page, username: string, nhiemVus: string[], nutGui: string) {
+/**
+ * Người làm KPI gửi đăng ký qua giao diện Đầu kỳ. v1.6: mọi nhiệm vụ của vị trí đã tick sẵn (khóa); chỉ chọn có
+ * đăng ký cải tiến sáng tạo hay không.
+ */
+export async function dangKyUi(page: Page, username: string, nutGui: string, caiTien = false) {
   await dangNhap(page, username);
   await page.goto("/dau-ky");
-  for (const nv of nhiemVus) await page.getByLabel(`Chọn ${nv}`).check();
-  await expect(page.getByTestId("so-nhiem-vu")).toHaveText(String(nhiemVus.length));
+  if (caiTien) {
+    await page.getByLabel("Tôi đăng ký thực hiện cải tiến sáng tạo trong kỳ này").check();
+    await expect(page.getByTestId("cai-tien")).toHaveText("Có");
+  }
   await page.getByRole("button", { name: nutGui }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Gửi" }).click();
   await expect(page.getByTestId("banner-trang-thai")).toContainText("Chờ duyệt");
