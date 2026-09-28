@@ -23,14 +23,15 @@ export function taoNutTask(hds: HanhDong[], doiTuong: DoiTuong): NutTask[] {
       nhan: "Duyệt",
       moTa: gopDuyetChot
         ? "Chấp nhận minh chứng. Task chưa được tính cho đến khi bấm Chốt."
-        : `Chấp nhận minh chứng. Task chưa được tính cho đến khi ${nguoiChot} chốt.`,
+        : `Chấp nhận minh chứng. Task lên ${nguoiChot} chốt ngay; chưa được tính cho đến khi ${nguoiChot} chốt.`,
       choPhepNhanXet: true,
     },
     TU_CHOI: { nhan: "Từ chối", moTa: `Trả minh chứng cho ${nguoiLam} nộp lại.`, choPhepNhanXet: true },
-    HUY_DUYET: { nhan: "Hủy duyệt", moTa: "Task quay về Chờ duyệt.", choPhepNhanXet: false },
-    GUI_CHOT: {
-      nhan: `Gửi lên ${nguoiChot}`,
-      moTa: `Gửi task đã duyệt lên ${nguoiChot} chốt. Đã gửi thì không hủy duyệt được nữa.`,
+    HUY_DUYET: {
+      nhan: "Hủy duyệt",
+      moTa: gopDuyetChot
+        ? "Task quay về Chờ duyệt."
+        : `Rút task khỏi danh sách chờ chốt của ${nguoiChot}, quay về Chờ duyệt. Chỉ làm được khi ${nguoiChot} chưa chốt.`,
       choPhepNhanXet: false,
     },
     CHOT: {
@@ -48,7 +49,7 @@ export function taoNutTask(hds: HanhDong[], doiTuong: DoiTuong): NutTask[] {
       moTa: `Task chuyển sang Bị từ chối để ${nguoiLam} nộp lại. Nhận xét này ${nguoiLam} sẽ thấy.`,
       choPhepNhanXet: true,
     },
-    DUYET_LAI: { nhan: "Duyệt lại", moTa: `Task về Đã duyệt, sau đó gửi lại lên ${nguoiChot}.`, choPhepNhanXet: false },
+    DUYET_LAI: { nhan: "Duyệt lại", moTa: `Task lên thẳng Chờ chốt của ${nguoiChot}.`, choPhepNhanXet: false },
   };
   const gop = gopDuyetChot;
   return hds

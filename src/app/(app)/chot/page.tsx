@@ -1,8 +1,8 @@
 // Màn hình Chốt dùng chung (mục 6.2): TK → task GV, HP → task TBM, HT → task TK.
 // Chỉ thấy người mà mình là người chốt, chỉ thấy task CHO_CHOT / DA_CHOT / TRA_VE; không thấy danh sách
-// đăng ký, task chưa gửi lên. Tham số theo vai trò lấy từ bảng cấu hình chuỗi duyệt – chốt.
+// đăng ký, task chưa được duyệt. v1.6: người duyệt bấm Duyệt là task vào Chờ chốt ngay (không còn Gửi lên). Tham số theo vai trò lấy từ bảng cấu hình chuỗi duyệt – chốt.
 import Link from "next/link";
-import type { DoiTuong, TrangThaiTask } from "@/generated/prisma/enums";
+import type { TrangThaiTask } from "@/generated/prisma/enums";
 import { TrangTieuDe } from "@/components/chung/trang-tieu-de";
 import { ChonKy } from "@/components/chung/chon-ky";
 import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
@@ -55,7 +55,7 @@ export default async function TrangChot(props: PageProps<"/chot">) {
     db.kpiTask.count({ where: { kyId: ky.id, userId: { in: ds.map((x) => x.id) }, trangThai: "CHO_CHOT" } }),
     db.kpiTask.findMany({
       where: { kyId: ky.id, userId: { in: idsLoc }, trangThai: loc === TAT_CA ? { in: NGUOI_CHOT_THAY } : loc },
-      // Cũ nhất lên trước theo thời điểm gửi lên (B10).
+      // Cũ nhất lên trước theo thời điểm vào Chờ chốt (B10; v1.6: lúc người duyệt duyệt).
       orderBy: [{ guiChotLuc: "asc" }, { capNhatLuc: "asc" }],
       include: {
         user: { select: { hoTen: true, username: true, role: true, boMonId: true, khoaId: true, id: true } },
@@ -83,7 +83,7 @@ export default async function TrangChot(props: PageProps<"/chot">) {
     <div className="space-y-6">
       <TrangTieuDe
         tieuDe={tieuDe}
-        moTa={`${ky.ten} · Task của ${TEN_VAI_TRO[viTri].toLowerCase()} đã được người duyệt gửi lên. Chốt xong task được tính hoàn thành ngay.`}
+        moTa={`${ky.ten} · Task của ${TEN_VAI_TRO[viTri].toLowerCase()} đã được người duyệt duyệt. Chốt xong task được tính hoàn thành ngay.`}
       >
         <ChonKy kyId={ky.id} kys={dsChonKy(kys)} />
       </TrangTieuDe>
@@ -111,7 +111,7 @@ export default async function TrangChot(props: PageProps<"/chot">) {
               loc === t ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted",
             )}
           >
-            {t === TAT_CA ? "Tất cả" : nhanChoQuanLy(t as TrangThaiTask, viTri)}
+            {t === TAT_CA ? "Tất cả" : nhanChoQuanLy(t as TrangThaiTask)}
           </Link>
         ))}
       </nav>
@@ -125,7 +125,7 @@ export default async function TrangChot(props: PageProps<"/chot">) {
               <TableHead>Người làm KPI</TableHead>
               <TableHead>Nhiệm vụ / Task</TableHead>
               <TableHead>Trạng thái</TableHead>
-              <TableHead>Gửi lên lúc</TableHead>
+              <TableHead>Duyệt lúc</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -155,7 +155,7 @@ export default async function TrangChot(props: PageProps<"/chot">) {
                   <div className="text-xs text-muted-foreground">{t.task.nhiemVu.ten}</div>
                 </TableCell>
                 <TableCell>
-                  <BadgeTrangThai trangThai={t.trangThai} nhan={nhanChoQuanLy(t.trangThai, t.user.role as DoiTuong)} />
+                  <BadgeTrangThai trangThai={t.trangThai} nhan={nhanChoQuanLy(t.trangThai)} />
                 </TableCell>
                 <TableCell className="text-sm">{t.guiChotLuc ? hienNgayGio(t.guiChotLuc) : "—"}</TableCell>
                 <TableCell>

@@ -41,12 +41,12 @@ export async function ChiTietTaskQuanLy({ kpiTaskId, tuCach }: { kpiTaskId: stri
           <CardTitle className="text-base">{kt.task.ten}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant={kt.task.loai === "BAT_BUOC" ? "default" : "outline"}>{NHAN_LOAI_TASK[kt.task.loai]}</Badge>
-            <BadgeTrangThai trangThai={kt.trangThai} nhan={nhanChoQuanLy(kt.trangThai, doiTuong)} />
+            <BadgeTrangThai trangThai={kt.trangThai} nhan={nhanChoQuanLy(kt.trangThai)} />
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
           {kt.task.nhiemVu.ten} · {kt.user.hoTen} ({kt.user.username}) · {TEN_VAI_TRO[doiTuong]}
-          {kt.guiChotLuc && ` · Gửi lên lúc ${hienNgayGio(kt.guiChotLuc)}`}
+          {kt.guiChotLuc && ` · Duyệt, chờ chốt từ ${hienNgayGio(kt.guiChotLuc)}`}
           {kt.chotLuc && ` · Chốt lúc ${hienNgayGio(kt.chotLuc)}`}
         </p>
         {kt.task.moTa && <p className="text-sm text-muted-foreground">{kt.task.moTa}</p>}

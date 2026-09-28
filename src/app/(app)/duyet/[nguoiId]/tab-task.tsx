@@ -26,7 +26,10 @@ export async function TabTask({
   taskId: string | undefined;
 }) {
   const doiTuong = nguoi.role as DoiTuong;
-  const trangThais = laGop(doiTuong) ? TAT_CA_TRANG_THAI.filter((t) => t !== "CHO_CHOT" && t !== "TRA_VE") : TAT_CA_TRANG_THAI;
+  // Task HP không dùng Chờ chốt / Bị trả về; task GV, TBM, TK không còn dừng ở Đã duyệt (v1.6, không còn Gửi lên).
+  const trangThais = laGop(doiTuong)
+    ? TAT_CA_TRANG_THAI.filter((t) => t !== "CHO_CHOT" && t !== "TRA_VE")
+    : TAT_CA_TRANG_THAI.filter((t) => t !== "DA_DUYET");
   const kpiTasks = await db.kpiTask.findMany({
     where: { kyId: ky.id, userId: nguoi.id },
     include: {
@@ -69,7 +72,7 @@ export async function TabTask({
                 (locHopLe ?? undefined) === t ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted",
               )}
             >
-              {t ? nhanChoQuanLy(t, doiTuong) : "Tất cả"} ({so})
+              {t ? nhanChoQuanLy(t) : "Tất cả"} ({so})
             </Link>
           );
         })}
@@ -107,7 +110,7 @@ export async function TabTask({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <BadgeTrangThai trangThai={k.trangThai} nhan={nhanChoQuanLy(k.trangThai, doiTuong)} />
+                  <BadgeTrangThai trangThai={k.trangThai} nhan={nhanChoQuanLy(k.trangThai)} />
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{k._count.baiNops}</TableCell>
                 <TableCell className="text-sm">{hienNgayGio(k.capNhatLuc)}</TableCell>

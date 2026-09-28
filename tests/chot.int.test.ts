@@ -22,7 +22,7 @@ async function phanTram(username: string) {
 }
 
 describe("vòng trạng thái đầy đủ task GV (mục 5.3)", () => {
-  it("gửi lên → TK trả về (bắt buộc nhận xét) → TBM trả làm lại → nộp lại → duyệt → gửi → TK chốt; % chỉ tăng khi chốt", async () => {
+  it("duyệt (lên Chờ chốt) → TK trả về (bắt buộc nhận xét) → TBM trả làm lại → nộp lại → duyệt → TK chốt; % chỉ tăng khi chốt", async () => {
     const [t1] = await taskCua("gv.tranthibinh");
     await lamTask("gv.tranthibinh", t1.id, "CHO_CHOT");
     expect(await phanTram("gv.tranthibinh")).toBe(0);
@@ -51,8 +51,7 @@ describe("vòng trạng thái đầy đủ task GV (mục 5.3)", () => {
     await dangNhapNhu("gv.tranthibinh");
     expect((await nop(t1.id)).status).toBe(201);
     await dangNhapNhu("tbm.phamthibich");
-    await thaoTac(t1.id, "DUYET");
-    await thaoTac(t1.id, "GUI_CHOT");
+    expect(await thaoTac(t1.id, "DUYET")).toEqual({ ok: true, data: { trangThai: "CHO_CHOT" } });
     expect(await phanTram("gv.tranthibinh")).toBe(0);
 
     await dangNhapNhu("tk.levankhoa");
@@ -71,22 +70,22 @@ describe("vòng trạng thái đầy đủ task GV (mục 5.3)", () => {
       /đã được chốt/,
     );
     const lichSu = await db.lichSuTask.findMany({ where: { kpiTaskId: t1.id }, orderBy: { luc: "asc" } });
-    expect(lichSu.map((l) => l.hanhDong)).toEqual(["NOP", "DUYET", "GUI_CHOT", "TRA_VE", "TU_CHOI", "NOP", "DUYET", "GUI_CHOT", "CHOT"]);
+    expect(lichSu.map((l) => l.hanhDong)).toEqual(["NOP", "DUYET", "TRA_VE", "TU_CHOI", "NOP", "DUYET", "CHOT"]);
   });
 
-  it("trả về → người duyệt duyệt lại → gửi lại → chốt", async () => {
+  it("trả về → người duyệt Duyệt lại → task lên thẳng Chờ chốt → chốt (v1.6)", async () => {
     const [, t2] = await taskCua("gv.tranthibinh");
     await lamTask("gv.tranthibinh", t2.id, "CHO_CHOT");
     await dangNhapNhu("tk.levankhoa");
     await thaoTac(t2.id, "TRA_VE", "Xem lại");
     await dangNhapNhu("tbm.phamthibich");
-    expect(await thaoTac(t2.id, "DUYET_LAI")).toEqual({ ok: true, data: { trangThai: "DA_DUYET" } });
-    expect((await thaoTac(t2.id, "GUI_CHOT")).ok).toBe(true);
+    expect(await thaoTac(t2.id, "DUYET_LAI")).toEqual({ ok: true, data: { trangThai: "CHO_CHOT" } });
+    expect((await kt(t2.id)).guiChotLuc).not.toBeNull();
     await dangNhapNhu("tk.levankhoa");
     expect((await thaoTac(t2.id, "CHOT")).ok).toBe(true);
   });
 
-  it("người chốt không thấy / không chốt được task chưa gửi lên; đã chốt thì không ai sửa được", async () => {
+  it("người chốt không chốt được task chưa được duyệt; duyệt xong chốt được ngay; đã chốt thì không ai sửa được", async () => {
     const [t1, , t3] = await taskCua("gv.tranthibinh");
     await dangNhapNhu("gv.tranthibinh");
     await nop(t3.id);
@@ -95,7 +94,7 @@ describe("vòng trạng thái đầy đủ task GV (mục 5.3)", () => {
     await dangNhapNhu("tbm.phamthibich");
     await thaoTac(t3.id, "DUYET");
     await dangNhapNhu("tk.levankhoa");
-    expect(await thaoTac(t3.id, "CHOT")).toEqual({ ok: false, error: "Không tìm thấy task." });
+    expect(await thaoTac(t3.id, "CHOT")).toEqual({ ok: true, data: { trangThai: "DA_CHOT" } });
     expect(await thaoTac(t1.id, "TRA_VE", "x")).toEqual({ ok: false, error: "Task đã chốt, không ai sửa được." });
     await dangNhapNhu("tbm.phamthibich");
     expect(await thaoTac(t1.id, "HUY_DUYET")).toEqual({ ok: false, error: "Task đã chốt, không ai sửa được." });
@@ -103,7 +102,7 @@ describe("vòng trạng thái đầy đủ task GV (mục 5.3)", () => {
 });
 
 describe("người chốt đúng cấp", () => {
-  it("task TBM: TK duyệt → gửi → HP chốt; task TK: HP duyệt → gửi → HT chốt; cấp khác không chốt được", async () => {
+  it("task TBM: TK duyệt → HP chốt; task TK: HP duyệt → HT chốt; cấp khác không chốt được", async () => {
     const [tb] = await taskCua("tbm.phamthibich");
     await lamTask("tbm.phamthibich", tb.id, "CHO_CHOT");
     for (const u of ["tk.levankhoa", "ht.nguyenvanhieu"]) {
@@ -122,17 +121,19 @@ describe("người chốt đúng cấp", () => {
     expect((await kt(tk.id)).trangThai).toBe("DA_CHOT");
   });
 
-  it("thiếu người chốt (khoa chưa có hiệu phó) → TK không gửi lên được task TBM", async () => {
+  it("thiếu người chốt (khoa chưa có hiệu phó) → TK không duyệt được task TBM lên Chờ chốt (A3, v1.6)", async () => {
     const [, tb2] = await taskCua("tbm.phamthibich");
-    await lamTask("tbm.phamthibich", tb2.id, "DA_DUYET");
+    await dangNhapNhu("tbm.phamthibich");
+    expect((await nop(tb2.id)).status).toBe(201);
     const khoa = await db.khoa.findFirstOrThrow();
     await db.khoa.update({ where: { id: khoa.id }, data: { hieuPhoId: null } });
     await dangNhapNhu("tk.levankhoa");
-    expect(await thaoTac(tb2.id, "GUI_CHOT")).toEqual({
+    expect(await thaoTac(tb2.id, "DUYET")).toEqual({
       ok: false,
       error: "Chưa có hiệu phó phụ trách, vui lòng liên hệ admin.",
     });
+    expect((await kt(tb2.id)).trangThai).toBe("CHO_DUYET");
     await db.khoa.update({ where: { id: khoa.id }, data: { hieuPhoId: (await user("hp.tranthiphuong")).id } });
-    expect((await thaoTac(tb2.id, "GUI_CHOT")).ok).toBe(true);
+    expect(await thaoTac(tb2.id, "DUYET")).toEqual({ ok: true, data: { trangThai: "CHO_CHOT" } });
   });
 });

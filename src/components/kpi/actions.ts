@@ -8,7 +8,7 @@ import { hanhDong } from "@/lib/loi";
 import { thucHienTask } from "@/lib/services/kpi-task";
 import { docDuLieu, NhanXetTuyChon } from "@/lib/validate";
 
-const HanhDongQuanLy = z.enum(["DUYET", "TU_CHOI", "HUY_DUYET", "GUI_CHOT", "CHOT", "TRA_VE", "TRA_LAM_LAI", "DUYET_LAI"], {
+const HanhDongQuanLy = z.enum(["DUYET", "TU_CHOI", "HUY_DUYET", "CHOT", "TRA_VE", "TRA_LAM_LAI", "DUYET_LAI"], {
   message: "Thao tác không hợp lệ.",
 });
 

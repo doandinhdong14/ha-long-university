@@ -35,4 +35,5 @@ export const LINK = {
     `/duyet/${userId}?kyId=${kyId}&tab=task&task=${kpiTaskId}`,
   duyetTongQuan: (kyId: string) => `/duyet?kyId=${kyId}`,
   chot: (kyId: string) => `/chot?kyId=${kyId}`,
+  chotTask: (kyId: string, kpiTaskId: string) => `/chot?kyId=${kyId}&task=${kpiTaskId}`,
 };

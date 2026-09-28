@@ -36,7 +36,7 @@ describe("bảng sự kiện mục 11 – chuỗi GV → TBM → TK", () => {
     expect((await tinMoiNhat("gv.tranthibinh"))?.noiDung).toMatch(/đã được duyệt/);
   });
 
-  it("nộp task → người duyệt; duyệt → người làm; gửi lên → người chốt; chốt → người làm + người duyệt; trả về → người duyệt", async () => {
+  it("nộp task → người duyệt; duyệt → người làm + người chốt (v1.6: ngay khi duyệt); chốt → người làm + người duyệt; trả về → người duyệt", async () => {
     const [t1, t2] = await taskCua("gv.tranthibinh");
     await dangNhapNhu("gv.tranthibinh");
     await nop(t1.id);
@@ -46,10 +46,9 @@ describe("bảng sự kiện mục 11 – chuỗi GV → TBM → TK", () => {
     await dangNhapNhu("tbm.phamthibich");
     await thaoTac(t1.id, "DUYET");
     expect((await tinMoiNhat("gv.tranthibinh"))?.noiDung).toMatch(/đã được duyệt/);
-    await thaoTac(t1.id, "GUI_CHOT");
     const tk = await tinMoiNhat("tk.levankhoa");
-    expect(tk?.noiDung).toMatch(/gửi lên task .* chờ chốt/);
-    expect(tk?.link).toBe(`/chot?kyId=${kyId}`);
+    expect(tk?.noiDung).toMatch(/đã duyệt task .* chờ chốt/);
+    expect(tk?.link).toBe(`/chot?kyId=${kyId}&task=${t1.id}`);
 
     await dangNhapNhu("tk.levankhoa");
     await thaoTac(t1.id, "CHOT");
@@ -59,7 +58,6 @@ describe("bảng sự kiện mục 11 – chuỗi GV → TBM → TK", () => {
 
     await dangNhapNhu("tbm.phamthibich");
     await thaoTac(t2.id, "DUYET");
-    await thaoTac(t2.id, "GUI_CHOT");
     await dangNhapNhu("tk.levankhoa");
     await thaoTac(t2.id, "TRA_VE", "Thiếu dấu");
     expect((await tinMoiNhat("tbm.phamthibich"))?.noiDung).toMatch(/trả về task .*Thiếu dấu/);

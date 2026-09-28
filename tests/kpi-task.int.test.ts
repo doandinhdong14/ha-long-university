@@ -78,11 +78,12 @@ describe("nộp / sửa minh chứng (người làm KPI)", () => {
   });
 });
 
-describe("người duyệt: duyệt, từ chối, hủy duyệt, gửi lên (GV/TBM/TK)", () => {
-  it("duyệt → Đã duyệt (treo), % không tăng; hủy duyệt → Chờ duyệt; gửi lên → Chờ chốt; đã gửi thì không hủy duyệt", async () => {
+describe("người duyệt: duyệt, từ chối, hủy duyệt (GV/TBM/TK) – v1.6 không còn Gửi lên", () => {
+  it("duyệt → Chờ chốt ngay (treo), % không tăng; hủy duyệt khi chưa chốt → Chờ duyệt; không còn thao tác Gửi lên", async () => {
     const [t1] = await taskCua("gv.nguyenvanan");
     await dangNhapNhu("tbm.phamthibich");
-    expect(await thaoTac(t1.id, "DUYET", "Tốt")).toEqual({ ok: true, data: { trangThai: "DA_DUYET" } });
+    expect(await thaoTac(t1.id, "DUYET", "Tốt")).toEqual({ ok: true, data: { trangThai: "CHO_CHOT" } });
+    expect((await db.kpiTask.findUniqueOrThrow({ where: { id: t1.id } })).guiChotLuc).not.toBeNull();
     const kq = (await tinhKetQua(kyId, (await user("gv.nguyenvanan")).id))!;
     expect(kq.phanTram).toBe(0);
     expect(kq.thongKe.dangTreo).toBe(1);
@@ -93,21 +94,24 @@ describe("người duyệt: duyệt, từ chối, hủy duyệt, gửi lên (GV/
     await dangNhapNhu("gv.nguyenvanan");
     expect((await suaBai(bn.id, "sửa lén")).status).toBe(409);
 
+    // Người duyệt bấm Duyệt → người chốt được báo ngay.
+    const tk = await user("tk.levankhoa");
+    const tb = await db.thongBao.findFirstOrThrow({ where: { userId: tk.id }, orderBy: { taoLuc: "desc" } });
+    expect(tb.noiDung).toMatch(/đã duyệt task .* chờ chốt/);
+
     await dangNhapNhu("tbm.phamthibich");
     expect(await thaoTac(t1.id, "HUY_DUYET")).toEqual({ ok: true, data: { trangThai: "CHO_DUYET" } });
     expect((await db.baiNop.findUniqueOrThrow({ where: { id: bn.id } })).trangThai).toBe("CHO_DUYET");
+    expect((await db.kpiTask.findUniqueOrThrow({ where: { id: t1.id } })).guiChotLuc).toBeNull();
+    // Hủy duyệt rồi thì người chốt không chốt được nữa.
+    await dangNhapNhu("tk.levankhoa");
+    expect(await thaoTac(t1.id, "CHOT")).toEqual({ ok: false, error: "Không tìm thấy task." });
 
+    await dangNhapNhu("tbm.phamthibich");
+    expect(await thaoTac(t1.id, "GUI_CHOT")).toEqual({ ok: false, error: "Thao tác không hợp lệ." });
     await thaoTac(t1.id, "DUYET");
-    expect(await thaoTac(t1.id, "GUI_CHOT")).toEqual({ ok: true, data: { trangThai: "CHO_CHOT" } });
-    const kt = await db.kpiTask.findUniqueOrThrow({ where: { id: t1.id } });
-    expect(kt.guiChotLuc).not.toBeNull();
-    expect(await thaoTac(t1.id, "HUY_DUYET")).toEqual({ ok: false, error: "Task đã gửi lên người chốt, không thể hủy duyệt." });
-
-    const tk = await user("tk.levankhoa");
-    const tb = await db.thongBao.findFirstOrThrow({ where: { userId: tk.id }, orderBy: { taoLuc: "desc" } });
-    expect(tb.noiDung).toMatch(/gửi lên task .* chờ chốt/);
     const lichSu = await db.lichSuTask.findMany({ where: { kpiTaskId: t1.id }, orderBy: { luc: "asc" } });
-    expect(lichSu.map((l) => l.hanhDong)).toEqual(["NOP", "SUA_BAI_NOP", "DUYET", "HUY_DUYET", "DUYET", "GUI_CHOT"]);
+    expect(lichSu.map((l) => l.hanhDong)).toEqual(["NOP", "SUA_BAI_NOP", "DUYET", "HUY_DUYET", "DUYET"]);
   });
 
   it("từ chối bắt buộc nhận xét → nộp lại tạo lần nộp mới", async () => {
@@ -133,7 +137,7 @@ describe("người duyệt: duyệt, từ chối, hủy duyệt, gửi lên (GV/
     expect(await trangThai(t3.id)).toBe("CHO_DUYET");
   });
 
-  it("TBM (TK duyệt, gửi lên HP) và TK (HP duyệt, gửi lên HT) tới Chờ chốt", async () => {
+  it("TBM (TK duyệt → HP chốt) và TK (HP duyệt → HT chốt) tới Chờ chốt ngay khi duyệt", async () => {
     const [tb] = await taskCua("tbm.phamthibich");
     await lamTask("tbm.phamthibich", tb.id, "CHO_CHOT");
     expect(await trangThai(tb.id)).toBe("CHO_CHOT");
@@ -143,7 +147,7 @@ describe("người duyệt: duyệt, từ chối, hủy duyệt, gửi lên (GV/
   });
 });
 
-describe("HT với task HP: Duyệt rồi Chốt (2 nút, không gửi lên)", () => {
+describe("HT với task HP: Duyệt rồi Chốt (2 nút, giữ nguyên ở v1.6)", () => {
   it("duyệt xong vẫn treo; hủy duyệt được trước khi chốt; chốt mới tính", async () => {
     const [h1, h2] = await taskCua("hp.tranthiphuong");
     const hp = await user("hp.tranthiphuong");
@@ -152,7 +156,7 @@ describe("HT với task HP: Duyệt rồi Chốt (2 nút, không gửi lên)", (
     await dangNhapNhu("ht.nguyenvanhieu");
     expect((await thaoTac(h1.id, "DUYET")).ok).toBe(true);
     expect((await tinhKetQua(kyId, hp.id))!.phanTram).toBe(0);
-    expect(await thaoTac(h1.id, "GUI_CHOT")).toEqual({ ok: false, error: "Thao tác này không áp dụng cho task của hiệu phó." });
+    expect(await thaoTac(h1.id, "TRA_VE", "x")).toMatchObject({ ok: false });
     expect(await thaoTac(h1.id, "HUY_DUYET")).toMatchObject({ ok: true, data: { trangThai: "CHO_DUYET" } });
     await thaoTac(h1.id, "DUYET");
     expect(await thaoTac(h1.id, "CHOT")).toEqual({ ok: true, data: { trangThai: "DA_CHOT" } });
@@ -200,7 +204,7 @@ describe("xin thêm task mở rộng", () => {
 });
 
 describe("quyền xem file minh chứng (12.2)", () => {
-  it("người làm, người duyệt, admin xem được; người chốt chỉ sau khi gửi lên; người khác bị chặn", async () => {
+  it("người làm, người duyệt, admin xem được; người chốt chỉ sau khi task được duyệt (lên Chờ chốt); người khác bị chặn", async () => {
     const [, , t3] = await taskCua("gv.nguyenvanan"); // đang Chờ duyệt
     const f = await db.fileDinhKem.findFirstOrThrow({ where: { baiNop: { kpiTaskId: t3.id } } });
     const thu = async (u: string) => {
@@ -217,10 +221,11 @@ describe("quyền xem file minh chứng (12.2)", () => {
 
     await dangNhapNhu("tbm.phamthibich");
     await thaoTac(t3.id, "DUYET");
-    expect(await thu("tk.levankhoa")).toBe(403);
-    await dangNhapNhu("tbm.phamthibich");
-    await thaoTac(t3.id, "GUI_CHOT");
     expect(await thu("tk.levankhoa")).toBe(200);
+    // Hủy duyệt → task rời Chờ chốt → người chốt lại bị chặn.
+    await dangNhapNhu("tbm.phamthibich");
+    await thaoTac(t3.id, "HUY_DUYET");
+    expect(await thu("tk.levankhoa")).toBe(403);
     // HT luôn xem được minh chứng của HP.
     const [h1] = await taskCua("hp.tranthiphuong");
     const fh = await db.fileDinhKem.findFirstOrThrow({ where: { baiNop: { kpiTaskId: h1.id } } });

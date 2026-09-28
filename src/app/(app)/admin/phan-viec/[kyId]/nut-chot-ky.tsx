@@ -13,7 +13,7 @@ export function NutChotKy({ kyId }: { kyId: string }) {
       variant="destructive"
       nguyHiem
       tieuDe="Chốt kỳ ngay?"
-      moTa="Hệ thống sẽ tính kết quả cho mọi giáo viên, trưởng bộ môn, trưởng khoa, hiệu phó và khóa toàn bộ thao tác trong kỳ (nộp, duyệt, gửi lên, chốt). Task chưa được chốt không được tính. Không thể hoàn tác."
+      moTa="Hệ thống sẽ tính kết quả cho mọi giáo viên, trưởng bộ môn, trưởng khoa, hiệu phó và khóa toàn bộ thao tác trong kỳ (nộp, duyệt, chốt). Task chưa được chốt không được tính. Không thể hoàn tác."
       nhanXacNhan="Chốt kỳ"
       disabled={pending}
       onXacNhan={() => chay(() => chotKyNgay(kyId), { thanhCong: (d) => `Đã chốt kỳ, tính kết quả cho ${d.soNguoi} người.` })}

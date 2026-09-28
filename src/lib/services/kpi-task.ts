@@ -1,5 +1,5 @@
-// Chuyển trạng thái task của người duyệt / người chốt (bảng 5.3, ghi chú 12.2). Một hàm cho mọi cấp:
-// tư cách (người duyệt / người chốt) tính theo cơ cấu hiện tại, luật chuyển lấy từ máy trạng thái.
+// Chuyển trạng thái task của người duyệt / người chốt (bảng 5.3, ghi chú 12.2; spec-v1.6 mục 7.2). Một hàm
+// cho mọi cấp: tư cách (người duyệt / người chốt) tính theo cơ cấu hiện tại, luật chuyển lấy từ máy trạng thái.
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import type { NguoiDung } from "@/lib/auth/dal";
@@ -38,8 +38,10 @@ async function layTask(tx: Tx, kpiTaskId: string) {
 
 /**
  * Người duyệt / người chốt thực hiện một hành động trên task:
- * Duyệt, Từ chối, Hủy duyệt, Gửi lên, Chốt (kể cả HT chốt task HP), Trả về, Trả làm lại, Duyệt lại.
- * Chuyển trạng thái bằng cập nhật có điều kiện; mọi hành động ghi LichSuTask.
+ * Duyệt, Từ chối, Hủy duyệt, Chốt (kể cả HT chốt task HP), Trả về, Trả làm lại, Duyệt lại.
+ * v1.6: Duyệt / Duyệt lại task GV, TBM, TK đưa task sang Chờ chốt ngay (không còn nút Gửi lên).
+ * Chuyển trạng thái bằng cập nhật có điều kiện (chỉ khi task còn đúng trạng thái đã đọc: hai người bấm
+ * cùng lúc thì người sau nhận lỗi); mọi hành động ghi LichSuTask.
  */
 export async function thucHienTask(
   m: NguoiDung,
@@ -57,14 +59,16 @@ export async function thucHienTask(
     const cc = await taiCoCau(tx);
     const tuCach = tuCachVoiTask(m, kt.user, cc);
     if (!luat || !tuCach.includes(luat.ai)) throw new LoiNghiepVu("Không tìm thấy task.", 404);
-    // Người chốt chỉ thấy task đã được gửi lên (CHO_CHOT, DA_CHOT, TRA_VE).
+    // Người chốt chỉ thấy task đã được duyệt lên (CHO_CHOT, DA_CHOT, TRA_VE).
     if (luat.ai === "CHOT" && !["CHO_CHOT", "DA_CHOT", "TRA_VE"].includes(kt.trangThai)) {
       throw new LoiNghiepVu("Không tìm thấy task.", 404);
     }
     chan(lyDoKhongThaoTacTask(kt.ky));
     chan(lyDoKhongChuyen(hd, kt.trangThai, gop), 409);
     if (luat.canNhanXet && !nhanXet) throw new LoiNghiepVu("Vui lòng nhập nhận xét.");
-    if (hd === "GUI_CHOT") chan(lyDoThieuNguoi(kt.user, cc, "chot"), 409);
+    // A3: thiếu người chốt thì không đưa task lên Chờ chốt được (trước đây chặn ở nút Gửi lên).
+    const lenChoChot = luat.sang === "CHO_CHOT";
+    if (lenChoChot) chan(lyDoThieuNguoi(kt.user, cc, "chot"), 409);
 
     const now = new Date();
     const { count } = await tx.kpiTask.updateMany({
@@ -72,7 +76,9 @@ export async function thucHienTask(
       data: {
         trangThai: luat.sang,
         capNhatLuc: now,
-        ...(hd === "GUI_CHOT" ? { guiChotLuc: now } : {}),
+        // guiChotLuc = lúc task vào danh sách Chờ chốt (sắp xếp màn hình Chốt, B10); hủy duyệt thì xóa.
+        ...(lenChoChot ? { guiChotLuc: now } : {}),
+        ...(hd === "HUY_DUYET" ? { guiChotLuc: null } : {}),
         ...(hd === "CHOT" ? { nguoiChotId: m.id, chotLuc: now } : {}),
         ...(hd === "TRA_VE" ? { nhanXetChot: nhanXet } : {}),
       },
@@ -102,6 +108,13 @@ export async function thucHienTask(
     const ten = `"${kt.task.ten}"`;
     const linkLam = LINK.taskCuaToi(kt.id);
     const tru = m.id;
+    // v1.6 (mục 6.4): "người duyệt gửi task lên → người chốt" nay bắn ngay khi Duyệt / Duyệt lại.
+    if (lenChoChot) {
+      await guiThongBao(tx, [nguoiChot(kt.user, cc)?.id], `${m.hoTen} đã duyệt task ${ten} của ${kt.user.hoTen}, chờ chốt.`, {
+        link: LINK.chotTask(kt.kyId, kt.id),
+        tru,
+      });
+    }
     switch (hd) {
       case "DUYET":
         await guiThongBao(tx, [kt.userId], `Task ${ten} đã được duyệt.`, { link: linkLam, tru });
@@ -109,12 +122,6 @@ export async function thucHienTask(
       case "TU_CHOI":
       case "TRA_LAM_LAI":
         await guiThongBao(tx, [kt.userId], `Task ${ten} bị từ chối, cần nộp lại. Nhận xét: ${nhanXet}`, { link: linkLam, tru });
-        break;
-      case "GUI_CHOT":
-        await guiThongBao(tx, [nguoiChot(kt.user, cc)?.id], `${m.hoTen} gửi lên task ${ten} của ${kt.user.hoTen}, chờ chốt.`, {
-          link: LINK.chot(kt.kyId),
-          tru,
-        });
         break;
       case "CHOT":
         await guiThongBao(tx, [kt.userId], `Task ${ten} đã được chốt – hoàn thành.`, { link: linkLam, tru });

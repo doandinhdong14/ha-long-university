@@ -112,7 +112,10 @@ export async function taskCua(username: string) {
   });
 }
 
-/** Người làm KPI nộp; người duyệt duyệt; (tuỳ chọn) gửi lên; (tuỳ chọn) người chốt chốt. */
+/**
+ * Người làm KPI nộp; người duyệt duyệt; (tuỳ chọn) người chốt chốt.
+ * v1.6: task GV/TBM/TK được duyệt là sang Chờ chốt ngay (không còn Gửi lên); "DA_DUYET" chỉ còn cho task HP.
+ */
 export async function lamTask(username: string, kpiTaskId: string, den: "DA_DUYET" | "CHO_CHOT" | "DA_CHOT") {
   await dangNhapNhu(username);
   const r = await nop(kpiTaskId);
@@ -122,15 +125,14 @@ export async function lamTask(username: string, kpiTaskId: string, den: "DA_DUYE
   await dangNhapNhu(duyet);
   const d = await thaoTac(kpiTaskId, "DUYET");
   if (!d.ok) throw new Error(d.error);
-  if (den === "DA_DUYET") return;
   if (duyet === chot) {
-    // Task HP: HT chốt ngay.
+    // Task HP: HT duyệt (DA_DUYET) rồi chốt.
+    if (den === "DA_DUYET") return;
     const c = await thaoTac(kpiTaskId, "CHOT");
     if (!c.ok) throw new Error(c.error);
     return;
   }
-  const g = await thaoTac(kpiTaskId, "GUI_CHOT");
-  if (!g.ok) throw new Error(g.error);
+  if (den === "DA_DUYET") throw new Error("v1.6: task GV/TBM/TK duyệt xong là Chờ chốt, không dừng ở Đã duyệt.");
   if (den === "CHO_CHOT") return;
   await dangNhapNhu(chot);
   const c = await thaoTac(kpiTaskId, "CHOT");

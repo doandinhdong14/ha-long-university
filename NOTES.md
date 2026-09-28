@@ -426,3 +426,32 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 **Test cũ sửa theo hành vi mới**
 - `tests/phan-viec.int.test.ts` › "công bố cần ≥1 nhiệm vụ…": tra nhiệm vụ vừa thêm bằng `laCaiTien: false` (kỳ mới nay luôn có sẵn 4 nhiệm vụ cải tiến).
 - `tests/phan-viec.int.test.ts` › "sao chép từ kỳ trước…": đếm nhiệm vụ thường bằng `laCaiTien: false`.
+
+## v1.6 – Bước 3: Bỏ bước Gửi lên (mục 7.2) + test mục 7.3 ✅
+
+**Đã làm**
+- Máy trạng thái `src/lib/kpi/trang-thai.ts` (vẫn là nơi duy nhất quy định chuyển trạng thái):
+  - task GV/TBM/TK: **Duyệt** `CHO_DUYET → CHO_CHOT`; **Duyệt lại** `TRA_VE → CHO_CHOT`; **Hủy duyệt** `CHO_CHOT → CHO_DUYET`; bỏ hẳn hành động `GUI_CHOT` (server action trả "Thao tác không hợp lệ.").
+  - task HP giữ nguyên: Duyệt → `DA_DUYET` → Chốt; Hủy duyệt khi `DA_DUYET`.
+  - lịch sử ghi `DUYET` (không ghi `GUI_CHOT` nữa), hủy ghi `HUY_DUYET`.
+- `thucHienTask` (`src/lib/services/kpi-task.ts`): task vào Chờ chốt thì lưu `guiChotLuc` (dùng làm "Duyệt lúc" và sắp xếp màn hình Chốt), Hủy duyệt xóa `guiChotLuc`; kiểm tra thiếu người chốt (A3) chuyển từ nút Gửi lên sang lúc Duyệt / Duyệt lại; cập nhật có điều kiện theo trạng thái đã đọc (hủy duyệt và chốt bấm cùng lúc → người sau nhận lỗi 409; task đã chốt → "Task đã chốt, không ai sửa được."). Hủy duyệt → task rời Chờ chốt nên người chốt không còn thấy, không mở được file.
+- Thông báo "…đã duyệt task … chờ chốt" gửi người chốt **ngay khi Duyệt / Duyệt lại**, link mở thẳng task trên màn hình Chốt (`/chot?kyId=…&task=…`).
+- Màn hình Duyệt: bỏ ô và cột "Chưa gửi lên"; Hàng chờ chỉ còn `CHO_DUYET`, `TRA_VE`; tab Task bỏ bộ lọc "Đã duyệt" với task GV/TBM/TK. Nút: Duyệt ("Task lên <người chốt> chốt ngay…"), Hủy duyệt ("Rút task khỏi danh sách chờ chốt…"), Duyệt lại ("Task lên thẳng Chờ chốt…").
+- Màn hình Chốt: cột "Gửi lên lúc" → "Duyệt lúc"; nhãn quản lý "Đã duyệt, chưa gửi lên" bỏ; lý do thiếu `DA_DUYET` chỉ còn "Đã duyệt nhưng chưa được chốt" (mục 6.2).
+- Migration dữ liệu `20260928145208_v16_bo_gui_len`: task GV/TBM/TK đang `DA_DUYET` ở kỳ chưa chốt → `CHO_CHOT` (giữ `guiChotLuc` nếu có, không thì lấy `capNhatLuc`). Kỳ đã chốt không đổi.
+- Test mục 7.3: `e2e/v16-03-duyet-len-cho-chot.spec.ts` (8/8, qua giao diện thật): GV→TBM duyệt→**TK thấy**, TBM→TK duyệt→**HP thấy**, TK→HP duyệt→**HT thấy**, HP→HT duyệt→HT thấy nút **Chốt** (và chốt được); không còn nút Gửi lên, không còn ô/cột "Chưa gửi lên", Hàng chờ trống sau khi duyệt; hủy duyệt → về Chờ duyệt và biến mất khỏi Chờ chốt, đã chốt → không còn nút; trả về → Duyệt lại → lên thẳng Chờ chốt.
+
+**Tự chọn**
+- Hàng chờ của **HT** vẫn gồm task HP `DA_DUYET` (HT tự chốt, mục 7.2 giữ nguyên task HP); ô "Đã duyệt, chưa chốt" (`data-o-dem="chua-chot"`) và cột "Chưa chốt" giữ cho HT.
+- Hủy duyệt không gửi thông báo (như v1.4). Duyệt lại cũng báo người chốt (task lại vào Chờ chốt của họ).
+- `nhanChoQuanLy` còn một tham số; `lyDoThieu` bỏ tham số vị trí (không còn khác nhau theo vị trí).
+
+**Test cũ sửa theo hành vi mới (bỏ Gửi lên)**
+- `src/lib/kpi/trang-thai.test.ts`: 4 test chuỗi GV/TBM/TK (nút của người duyệt, đích chuyển, hủy duyệt khi Chờ chốt), test task HP (không còn `GUI_CHOT`), nhãn quản lý.
+- `src/lib/ket-qua.test.ts` › "treo đến hết kỳ": task GV không còn `DA_DUYET`, lý do theo mục 6.2.
+- `tests/helpers.ts` › `lamTask`: bỏ bước `GUI_CHOT`; `"DA_DUYET"` chỉ dùng cho task HP.
+- `tests/chot.int.test.ts`: vòng trả về (lịch sử không còn `GUI_CHOT`), Duyệt lại → `CHO_CHOT`, người chốt chốt được ngay sau khi duyệt, thiếu hiệu phó → chặn ở Duyệt thay vì Gửi lên.
+- `tests/kpi-task.int.test.ts`: duyệt → `CHO_CHOT` + báo người chốt, hủy duyệt từ Chờ chốt, `GUI_CHOT` bị từ chối; quyền file của người chốt mở ngay sau duyệt, đóng lại sau hủy duyệt; task HP không còn thử `GUI_CHOT`.
+- `tests/thong-bao.int.test.ts`: thông báo người chốt bắn khi Duyệt, link mở thẳng task.
+- `e2e/v16-01-tai-hien-cho-chot.spec.ts` (bước 1) đổi thành `e2e/v16-03-duyet-len-cho-chot.spec.ts` theo hành vi mới.
+- E2E cũ (bước 5–11, bộ nghiệm thu v1.4) sửa ở bước 11.

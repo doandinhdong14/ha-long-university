@@ -53,12 +53,13 @@ describe("tinhKetQua (mục 10.3) – chỉ DA_CHOT được tính", () => {
     const kq = tinhKetQuaThuan({
       doiTuong: "GV",
       dangKy: duyet("A1"),
-      tasks: [t("a", "BAT_BUOC", "DA_DUYET"), t("b", "BAT_BUOC", "CHO_CHOT"), t("c", "BAT_BUOC", "TRA_VE")],
+      // v1.6: task GV không còn dừng ở Đã duyệt (duyệt là lên Chờ chốt).
+      tasks: [t("a", "BAT_BUOC", "CHO_CHOT"), t("b", "BAT_BUOC", "CHO_CHOT"), t("c", "BAT_BUOC", "TRA_VE")],
       bacs: BAC,
     });
     expect(kq).toMatchObject({ ketQua: "KHONG_DAT", phanTram: 0, soTreo: 2 });
     expect(kq.taskThieu.map((x) => x.lyDo)).toEqual([
-      "Đã duyệt nhưng chưa gửi lên / chưa được chốt",
+      "Chờ chốt, chưa được chốt kịp",
       "Chờ chốt, chưa được chốt kịp",
       "Bị cấp chốt trả về, chưa xử lý xong",
     ]);

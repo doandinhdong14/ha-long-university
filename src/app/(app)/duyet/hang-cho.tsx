@@ -1,25 +1,29 @@
 import Link from "next/link";
 import type { Ky } from "@/generated/prisma/client";
-import type { DoiTuong } from "@/generated/prisma/enums";
+import type { TrangThaiTask } from "@/generated/prisma/enums";
 import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { NguoiDung } from "@/lib/auth/dal";
 import { nguoiToiDuyet } from "@/lib/co-cau";
 import { db } from "@/lib/db";
-import { nhanChoQuanLy } from "@/lib/kpi/trang-thai";
+import { viTriDuocDuyet } from "@/lib/kpi/chuoi";
+import { laGop, nhanChoQuanLy } from "@/lib/kpi/trang-thai";
 import { layCoCau } from "@/lib/services/co-cau";
 import { LINK } from "@/lib/thong-bao";
 import { hienNgayGio } from "@/lib/time";
 
 /**
- * Tab Hàng chờ (mục 6.1): mọi task Chờ duyệt, Bị trả về, Đã duyệt (chưa gửi lên / chưa chốt) của những
- * người mình duyệt, cũ nhất lên trước (theo thời điểm đổi trạng thái gần nhất, B10).
+ * Tab Hàng chờ (mục 6.1): task Chờ duyệt, Bị trả về của những người mình duyệt, cũ nhất lên trước (theo
+ * thời điểm đổi trạng thái gần nhất, B10). v1.6: task đã duyệt đã nằm ở người chốt nên không còn ở đây;
+ * riêng HT với task HP (tự chốt) vẫn thấy task Đã duyệt, chưa chốt.
  */
 export async function HangCho({ m, ky }: { m: NguoiDung; ky: Ky }) {
   const cc = await layCoCau();
   const ids = nguoiToiDuyet(m, cc).map((x) => x.id);
+  const viTri = viTriDuocDuyet(m.role);
+  const trangThais: TrangThaiTask[] = viTri && laGop(viTri) ? ["CHO_DUYET", "DA_DUYET"] : ["CHO_DUYET", "TRA_VE"];
   const tasks = await db.kpiTask.findMany({
-    where: { kyId: ky.id, userId: { in: ids }, trangThai: { in: ["CHO_DUYET", "TRA_VE", "DA_DUYET"] } },
+    where: { kyId: ky.id, userId: { in: ids }, trangThai: { in: trangThais } },
     orderBy: { capNhatLuc: "asc" },
     include: {
       user: { select: { hoTen: true, username: true, role: true } },
@@ -58,7 +62,7 @@ export async function HangCho({ m, ky }: { m: NguoiDung; ky: Ky }) {
                 <div className="text-xs text-muted-foreground">{t.task.nhiemVu.ten}</div>
               </TableCell>
               <TableCell>
-                <BadgeTrangThai trangThai={t.trangThai} nhan={nhanChoQuanLy(t.trangThai, t.user.role as DoiTuong)} />
+                <BadgeTrangThai trangThai={t.trangThai} nhan={nhanChoQuanLy(t.trangThai)} />
               </TableCell>
               <TableCell className="text-sm">{hienNgayGio(t.capNhatLuc)}</TableCell>
               <TableCell>

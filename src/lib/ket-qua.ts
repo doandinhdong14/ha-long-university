@@ -2,7 +2,6 @@
 // cột % ở màn hình Duyệt. Chỉ task DA_CHOT mới được tính. Hàm thuần (dữ liệu tải ở
 // src/lib/services/ket-qua.ts).
 import type { DoiTuong, KetQua, LoaiTask, TrangThaiDangKy, TrangThaiTask } from "@/generated/prisma/enums";
-import { CHUOI } from "@/lib/kpi/chuoi";
 import { bacThapNhat, type Bac } from "@/lib/xep-loai";
 
 export const DUOC_TINH: readonly TrangThaiTask[] = ["DA_CHOT"];
@@ -12,7 +11,7 @@ export const DANG_TREO: readonly TrangThaiTask[] = ["DA_DUYET", "CHO_CHOT"];
 export const GHI_CHU_CHUA_DUYET = "Chưa có danh sách nhiệm vụ được duyệt";
 
 /** Lý do task còn thiếu theo trạng thái lúc chốt kỳ (mục 5.4). */
-export function lyDoThieu(trangThai: TrangThaiTask, doiTuong: DoiTuong): string {
+export function lyDoThieu(trangThai: TrangThaiTask): string {
   switch (trangThai) {
     case "CHUA_LAM":
       return "Chưa nộp minh chứng";
@@ -21,8 +20,8 @@ export function lyDoThieu(trangThai: TrangThaiTask, doiTuong: DoiTuong): string 
     case "CHO_DUYET":
       return "Chờ duyệt, chưa được duyệt kịp";
     case "DA_DUYET":
-      // B9: task HP không có bước gửi lên.
-      return CHUOI[doiTuong].gopDuyetChot ? "Đã duyệt nhưng chưa được chốt" : "Đã duyệt nhưng chưa gửi lên / chưa được chốt";
+      // v1.6 (mục 6.2): chỉ task HP còn ở trạng thái này.
+      return "Đã duyệt nhưng chưa được chốt";
     case "CHO_CHOT":
       return "Chờ chốt, chưa được chốt kịp";
     case "TRA_VE":
@@ -68,7 +67,7 @@ export function tinhKetQuaThuan(input: {
   /** Bảng xếp loại của đúng vị trí trong kỳ. */
   bacs: Bac[];
 }): KetQuaTinh {
-  const { doiTuong, dangKy, tasks } = input;
+  const { dangKy, tasks } = input;
   const batBuoc = tasks.filter((t) => t.loai === "BAT_BUOC");
   const dem = (ds: readonly TrangThaiTask[]) => batBuoc.filter((t) => ds.includes(t.trangThai)).length;
   const thongKe: ThongKe = {
@@ -103,7 +102,7 @@ export function tinhKetQuaThuan(input: {
     ketQua === "KHONG_DAT"
       ? batBuoc
           .filter((t) => !DUOC_TINH.includes(t.trangThai))
-          .map((t) => ({ ten: t.ten, nhiemVu: t.nhiemVu, trangThai: t.trangThai, lyDo: lyDoThieu(t.trangThai, doiTuong) }))
+          .map((t) => ({ ten: t.ten, nhiemVu: t.nhiemVu, trangThai: t.trangThai, lyDo: lyDoThieu(t.trangThai) }))
       : [];
   return {
     ketQua,

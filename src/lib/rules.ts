@@ -45,7 +45,7 @@ export function lyDoKhongDuyetDangKy(ky: KyLuat, now: Date = new Date()): string
 
 /**
  * Mọi hành động khác trong kỳ (bảng 10.1): nộp/sửa minh chứng, xin thêm, duyệt/từ chối,
- * hủy duyệt, gửi lên, chốt, trả về. Đến hết deadline, kỳ chưa chốt.
+ * hủy duyệt, chốt, trả về. Đến hết deadline, kỳ chưa chốt.
  */
 export function lyDoKhongThaoTacTask(ky: KyLuat, now: Date = new Date()): string | null {
   return lyDoKyKhongMo(ky) ?? lyDoHetDeadline(ky, now);

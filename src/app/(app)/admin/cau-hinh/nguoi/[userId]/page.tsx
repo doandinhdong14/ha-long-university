@@ -80,7 +80,7 @@ export default async function TrangTienDoMotNguoi(props: PageProps<"/admin/cau-h
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={k.task.loai === "BAT_BUOC" ? "default" : "outline"}>{NHAN_LOAI_TASK[k.task.loai]}</Badge>
-              <BadgeTrangThai trangThai={k.trangThai} nhan={nhanChoQuanLy(k.trangThai, doiTuong)} />
+              <BadgeTrangThai trangThai={k.trangThai} nhan={nhanChoQuanLy(k.trangThai)} />
             </div>
           </CardHeader>
           <CardContent className="grid gap-4 lg:grid-cols-2">

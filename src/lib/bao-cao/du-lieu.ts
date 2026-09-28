@@ -133,7 +133,7 @@ export async function layDuLieuBaoCao(
           nhiemVu: k.task.nhiemVu.ten,
           ten: k.task.ten,
           loai: NHAN_LOAI_TASK[k.task.loai as LoaiTask],
-          trangThai: nhanChoQuanLy(k.trangThai, role),
+          trangThai: nhanChoQuanLy(k.trangThai),
           duocTinh: DUOC_TINH.includes(k.trangThai),
           ngayNopGanNhat: k.baiNops[0]?.nopLuc ?? null,
           soLanNop: k.baiNops.length,

@@ -41,7 +41,4 @@ export const PHAM_VI_BAO_CAO: Partial<Record<Role, DoiTuong[]>> = {
   HT: ["GV", "TBM", "TK", "HP"],
 };
 
-/** Nhãn cho người duyệt: task đã duyệt nhưng chưa xong bước kế tiếp (gửi lên / HT chốt task HP). */
-export function nhanDaDuyetChuaXong(doiTuong: DoiTuong): string {
-  return CHUOI[doiTuong].gopDuyetChot ? "Đã duyệt, chưa chốt" : "Đã duyệt, chưa gửi lên";
-}
+

@@ -6,7 +6,7 @@ import { ChonKy } from "@/components/chung/chon-ky";
 import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { yeuCauVaiTro } from "@/lib/auth/dal";
-import { CHUOI, nhanDaDuyetChuaXong, viTriDuocDuyet } from "@/lib/kpi/chuoi";
+import { CHUOI, viTriDuocDuyet } from "@/lib/kpi/chuoi";
 import { tenMuc } from "@/lib/menu";
 import { NHAN_DANG_KY, NHAN_KET_QUA } from "@/lib/nhan";
 import { TEN_VAI_TRO } from "@/lib/roles";
@@ -46,9 +46,9 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
   const oDem = [
     { nhan: "Danh sách đăng ký chờ duyệt", so: dong.filter((d) => d.dangKy?.trangThai === "CHO_DUYET").length, id: "dang-ky" },
     { nhan: "Task chờ duyệt", so: tong((d) => d.demTask.CHO_DUYET ?? 0), id: "cho-duyet" },
-    { nhan: nhanDaDuyetChuaXong(viTri), so: tong((d) => d.demTask.DA_DUYET ?? 0), id: "chua-gui" },
+    // v1.6: không còn "Chưa gửi lên". HT với task HP vẫn tự chốt nên giữ ô "Đã duyệt, chưa chốt".
     ...(gop
-      ? []
+      ? [{ nhan: "Đã duyệt, chưa chốt", so: tong((d) => d.demTask.DA_DUYET ?? 0), id: "chua-chot" }]
       : [
           { nhan: "Task chờ chốt", so: tong((d) => d.demTask.CHO_CHOT ?? 0), id: "cho-chot" },
           { nhan: "Task bị trả về", so: tong((d) => d.demTask.TRA_VE ?? 0), id: "tra-ve" },
@@ -100,7 +100,7 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
                   <TableHead>Đăng ký</TableHead>
                   <TableHead className="text-right">% hoàn thành</TableHead>
                   <TableHead className="text-right">Chờ duyệt</TableHead>
-                  <TableHead className="text-right">{gop ? "Chưa chốt" : "Chưa gửi lên"}</TableHead>
+                  {gop && <TableHead className="text-right">Chưa chốt</TableHead>}
                   {!gop && <TableHead className="text-right">Chờ chốt</TableHead>}
                   {!gop && <TableHead className="text-right">Bị trả về</TableHead>}
                   <TableHead className="text-right">Xin thêm chờ duyệt</TableHead>
@@ -140,7 +140,7 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
                       {hienPhanTram(ketQua.get(d.nguoi.id)?.phanTram ?? 0)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{d.demTask.CHO_DUYET ?? 0}</TableCell>
-                    <TableCell className="text-right tabular-nums">{d.demTask.DA_DUYET ?? 0}</TableCell>
+                    {gop && <TableCell className="text-right tabular-nums">{d.demTask.DA_DUYET ?? 0}</TableCell>}
                     {!gop && <TableCell className="text-right tabular-nums">{d.demTask.CHO_CHOT ?? 0}</TableCell>}
                     {!gop && <TableCell className="text-right tabular-nums">{d.demTask.TRA_VE ?? 0}</TableCell>}
                     <TableCell className="text-right tabular-nums">{d.xinThemChoDuyet}</TableCell>
