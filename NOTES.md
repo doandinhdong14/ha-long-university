@@ -616,3 +616,51 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 - **Production (Railway)** chưa deploy nhánh này. Khi deploy, `npm run release` chạy 2 migration v1.6 (thêm cột; chuyển task GV/TBM/TK `DA_DUYET` → `CHO_CHOT` ở kỳ chưa chốt) và seed bổ sung nhiệm vụ cải tiến cho mọi kỳ — không cần reset. Lỗi "Chờ chốt trống" chưa kiểm tra trên dữ liệu production (bước 1 tái hiện bằng seed).
 - Nhánh `feature/v1.6` chưa merge vào `main`, chưa push.
 - Cảnh báo `pg` "client.query() when the client is already executing" khi chạy test tích hợp: có từ trước, không ảnh hưởng kết quả.
+
+---
+
+# Bổ sung Phụ lục IV, V (29/09/2026)
+
+**Đã làm**
+- File mẫu của trường chép nguyên bản (không sửa, SHA-256 trùng bản gốc trong `docs/`): `public/templates/phu-luc-iv.docx`, `public/templates/phu-luc-v.docx`.
+- `src/lib/templates.ts`: hằng số dùng chung (đường dẫn, tên file khi tải `Phu_luc_IV.docx` / `Phu_luc_V.docx`, tiêu đề đúng như trong file, định dạng nhận của Phụ lục V). Mọi chỗ dùng phụ lục lấy từ đây: khối "Đăng ký cải tiến sáng tạo" ở Đầu kỳ (hiện tiêu đề Phụ lục IV, nút Tải về), gợi ý nộp task cải tiến, mô tả task cải tiến, ghi chú mục 2.3 menu Phân hệ mở rộng (chữ hiển thị không đổi).
+- Phụ lục V cho hiệu phó:
+  - Cuối kỳ của HP (dưới cùng): khối "PHỤ LỤC V. MẪU PHIẾU TỰ ĐÁNH GIÁ VÀ XẾP LOẠI PHÓ HIỆU TRƯỞNG" – tải mẫu, chọn 1 file (PDF/DOC/DOCX ≤ 20MB), nút "Gửi hiệu trưởng"; đã gửi thì hiện tên file, thời gian gửi, nhãn "Đã gửi hiệu trưởng"; gửi lại thay bản cũ đến hết deadline; hết deadline / kỳ đã chốt → khóa (`lyDoKhongThaoTacTask`).
+  - HT – "Duyệt & chốt hiệu phó": cột "Phụ lục V" (Chưa gửi / Đã gửi dd/mm/yyyy); trang chi tiết hiệu phó có khối Phụ lục V (PDF xem ngay, tải file, thời gian gửi). Chỉ nhận và xem.
+  - Gửi / gửi lại → thông báo trong web cho HT: "Hiệu phó <tên> đã gửi Phụ lục V – <kỳ>", bấm vào mở trang chi tiết hiệu phó.
+  - Dữ liệu: model mới `PhuLucV` (kyId, userId, fileId → FileDinhKem, guiLuc; unique kỳ + người), migration `20260928174355_phu_luc_v` chỉ tạo bảng mới. Model cũ chỉ thêm quan hệ ngược (không thêm cột). Không reset dữ liệu.
+  - Quyền (server): `POST /api/phu-luc-v` chỉ HP, chỉ gửi của chính mình; file Phụ lục V chỉ hiệu phó đó, HT, Admin mở được (`quyen-file.ts`), vai trò khác 403.
+- Test: `tests/phu-luc-v.int.test.ts` (7), `e2e/phu-luc.spec.ts` (6).
+
+**Tự chọn**
+- Bỏ route `src/app/templates/phu-luc-iv.docx/route.ts` (bước 5 v1.6): khi file thật nằm trong `public/` cùng đường dẫn, `next dev` báo lỗi 500 "conflicting public file and page file". File nay có sẵn lúc build nên Next phục vụ tĩnh; người chưa đăng nhập vẫn bị proxy chuyển về trang đăng nhập. Thẻ `<a download>` đặt tên file khi tải.
+- `PhuLucV.file` xóa theo `FileDinhKem` (onDelete Cascade) → nút "Reset dữ liệu" của admin xóa luôn Phụ lục V mà không phải sửa code reset.
+
+**Test cũ sửa**
+- `e2e/v16-05-dau-ky.spec.ts` › "chưa có file Phụ lục IV…": trước đây tự bỏ qua khi máy đã có file; nay file thật luôn có trong repo nên test tạm dời file đi để giả lập "chưa có file", xem xong trả lại (test "gửi → Chờ duyệt…" phía sau dựa vào ô cải tiến test này tick).
+
+**Việc còn tồn**
+- Xóa hẳn tài khoản hiệu phó: bản ghi Phụ lục V bị xóa theo, nhưng dòng `FileDinhKem` và file trên ổ đĩa còn lại (không ai ngoài admin mở được, không hiện ở đâu). Không sửa vì nằm ngoài phạm vi yêu cầu (code xóa tài khoản).
+
+## Đối chiếu phụ lục
+
+Chỉ ghi chỗ **không khớp** với hệ thống; không sửa logic hệ thống vì chuyện này.
+
+**Phụ lục IV – "PHIẾU ĐĂNG KÝ THẨM ĐỊNH GIẢI PHÁP CẢI TIẾN, SÁNG TẠO"** – đúng là mẫu đăng ký cải tiến / sáng tạo.
+1. Ghi "(Khối Hành chính - Trường Đại học Hạ Long)"; hệ thống dùng mẫu này cho GV, TBM, TK, HP.
+2. Có 2 mức: **Cải tiến 05 điểm**, **Sáng tạo 10 điểm**, hội đồng có thể "Không thông qua". Hệ thống chỉ có 1 mức **+10%** (không phân biệt cải tiến / sáng tạo, tính bằng %, không cộng điểm – spec-v1.6 mục 2.1, 4.1).
+3. Nhiều tác giả, chia **tỷ lệ % đóng góp** (tổng 100%), từng người ký. Hệ thống: cải tiến là của một người.
+4. Người công nhận: **Hội đồng đánh giá cấp trường** (kèm xác nhận của trưởng đơn vị). Hệ thống: task cải tiến đi chuỗi duyệt – chốt thường (người duyệt, người chốt theo vị trí).
+5. "Áp dụng cho kỳ đánh giá: **Quý** ….. Năm 202…"; kỳ của hệ thống là học kỳ ("Kỳ 1 – 2026-2027").
+6. Trường thông tin hệ thống chưa có (chỉ nằm trong file nộp): tên giải pháp, phân loại, danh sách người tham gia + tỷ lệ, tóm tắt (cách làm cũ và điểm nghẽn, nội dung mới, kết quả định lượng, khả năng nhân rộng), link sản phẩm, ý kiến trưởng đơn vị, kết luận hội đồng (mức công nhận, tỷ lệ).
+
+**Phụ lục V – "PHIẾU TỰ ĐÁNH GIÁ VÀ XẾP LOẠI PHÓ HIỆU TRƯỞNG"** – đúng là dành cho hiệu phó, hiệu trưởng đánh giá (khớp HT là người duyệt HP).
+1. **Thang điểm khác**: tổng **120 điểm** = Nhóm tiêu chí chung 30 + Kết quả thực hiện chức trách 70 + Cải tiến sáng tạo 20. Hệ thống: điểm của HP = tổng điểm nhiệm vụ đăng ký (seed 100), xếp loại theo ngưỡng A1 ≥ 80, A2 ≥ 65, B ≥ 50, C ≥ 35, D ≥ 20, F.
+2. **Phiếu không có bảng quy đổi điểm → xếp loại** (dù tên phiếu có "xếp loại"), nên không đối chiếu được A1–F. Phiếu chỉ nhắc xếp loại **A, B, C, D** của trưởng đơn vị và VC, NLĐ (tiêu chí 2.2) – không có A1, A2, F như hệ thống.
+3. Cải tiến sáng tạo: **5 điểm/cải tiến, 10 điểm/sáng tạo, tối đa 20 điểm/kỳ, được nhiều cải tiến**. Hệ thống: tối đa 1 task cải tiến, +10%.
+4. Tiêu chí 2.1 tính từ **điểm Nhóm II của các trưởng đơn vị trực thuộc**: Điểm TB = Σ điểm Nhóm II / số trưởng đơn vị; điểm quy đổi = Điểm TB / 70 × 40 (trần 40). Hệ thống chưa có điểm theo nhóm tiêu chí cho trưởng đơn vị.
+5. Tiêu chí 2.2 dựa vào xếp loại A/B/C/D của trưởng đơn vị và VC, NLĐ; hệ thống chỉ có kết quả Đạt / Không đạt / Vượt + xếp loại đăng ký A1–F.
+6. Nhóm tiêu chí chung trừ điểm theo "Khung quy đổi điểm chi tiết tại **Phụ lục II**" – hệ thống không có Phụ lục II.
+7. Cột **"Hiệu trưởng đánh giá"** (HT chấm điểm từng tiêu chí); theo yêu cầu, hệ thống chỉ cho HT nhận và xem file, không chấm.
+8. Trường thông tin hệ thống chưa có (chỉ nằm trong file nộp): điểm tự chấm và điểm HT đánh giá từng tiêu chí, link minh chứng từng tiêu chí, ghi chú, đơn vị công tác, lời cam đoan, chữ ký.
+9. Lỗi đánh số trong mẫu: nhóm đầu ghi "A", hai nhóm sau ghi "II", "III", dòng tổng ghi "I + II + III". Không sửa file (mẫu chính thức).

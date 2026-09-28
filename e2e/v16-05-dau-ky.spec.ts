@@ -1,6 +1,6 @@
 // v1.6 – Bước 5 (mục 2, 3, 12.3): Đầu kỳ mọi nhiệm vụ bắt buộc (tick sẵn, khóa), khối Đăng ký cải tiến sáng tạo +
 // Phụ lục IV, người duyệt thấy dòng cải tiến, admin Phân việc có nhiệm vụ hệ thống, không còn giao diện xin thêm task.
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
 import { dangNhap, duyetDangKyUi, resetDb, sql } from "./helpers";
@@ -36,12 +36,19 @@ test("GV: mọi nhiệm vụ tick sẵn + khóa + nhãn Bắt buộc; thanh tổ
 });
 
 test("chưa có file Phụ lục IV → \"đang được cập nhật\", nút Tải về khóa; vẫn tick cải tiến được (tự lưu)", async ({ page }) => {
-  test.skip(existsSync(FILE_PHU_LUC) && !taoFileTam, "Máy đã có file Phụ lục IV thật – bỏ qua case chưa có file.");
-  await dangNhap(page, "gv.nguyenvanan");
-  await page.goto("/dau-ky");
-  const khoi = page.getByTestId("khoi-cai-tien");
-  await expect(khoi.getByTestId("phu-luc-iv")).toContainText("Mẫu Phụ lục IV đang được cập nhật");
-  await expect(khoi.getByRole("button", { name: "Tải về" })).toBeDisabled();
+  // File mẫu thật đã có trong repo: tạm dời đi để giả lập "chưa có file", xem xong trả lại ngay.
+  const tam = `${FILE_PHU_LUC}.tam-test`;
+  const coFile = existsSync(FILE_PHU_LUC);
+  if (coFile) renameSync(FILE_PHU_LUC, tam);
+  try {
+    await dangNhap(page, "gv.nguyenvanan");
+    await page.goto("/dau-ky");
+    const khoi = page.getByTestId("khoi-cai-tien");
+    await expect(khoi.getByTestId("phu-luc-iv")).toContainText("Mẫu Phụ lục IV đang được cập nhật");
+    await expect(khoi.getByRole("button", { name: "Tải về" })).toBeDisabled();
+  } finally {
+    if (coFile) renameSync(tam, FILE_PHU_LUC);
+  }
 
   const hop = page.getByLabel("Tôi đăng ký thực hiện cải tiến sáng tạo trong kỳ này");
   await hop.check();

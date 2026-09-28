@@ -1,5 +1,6 @@
 // Cuối kỳ – những gì đã hoàn thành trong kỳ: chỉ các task đã chốt (DA_CHOT), kèm tổng quan và kết quả kỳ.
-// Một trang cho GV, TBM, TK, HP; cùng giao diện với Trong kỳ nhưng chỉ để xem.
+// Một trang cho GV, TBM, TK, HP; cùng giao diện với Trong kỳ nhưng chỉ để xem. Hiệu phó có thêm khối Phụ lục V ở
+// dưới cùng (gửi hiệu trưởng).
 import { TrangTieuDe } from "@/components/chung/trang-tieu-de";
 import { ChonKy } from "@/components/chung/chon-ky";
 import { KhoiKetQua } from "@/components/kpi/khoi-ket-qua";
@@ -8,7 +9,9 @@ import { yeuCauNguoiLamKpi } from "@/lib/auth/dal";
 import { DUOC_TINH } from "@/lib/ket-qua";
 import { taiKpiCuaToi } from "@/lib/services/kpi-cua-toi";
 import { dsChonKy, layKyTheoUrl } from "@/lib/services/ky";
+import { PHU_LUC_V } from "@/lib/templates";
 import { deadline, hienNgayGio } from "@/lib/time";
+import { KhoiPhuLucV } from "./khoi-phu-luc-v";
 
 export default async function TrangCuoiKy(props: PageProps<"/cuoi-ky">) {
   const u = await yeuCauNguoiLamKpi();
@@ -71,6 +74,8 @@ export default async function TrangCuoiKy(props: PageProps<"/cuoi-ky">) {
           />
         </>
       )}
+
+      {u.role === PHU_LUC_V.viTri && <KhoiPhuLucV ky={ky} userId={u.id} />}
     </div>
   );
 }

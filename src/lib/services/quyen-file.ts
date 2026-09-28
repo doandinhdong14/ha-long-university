@@ -4,6 +4,7 @@
 // - v1.6 (spec-v1.6 mục 8.4): minh chứng của task DA_CHOT còn xem được bởi người có X trong phạm vi "Theo dõi kết
 //   quả đã chốt" – HP (X là GV/TBM thuộc khoa HP phụ trách), HT (mọi người làm KPI).
 // - File quy định: HT, người có vị trí được tick, Admin.
+// - Phụ lục V của hiệu phó (src/lib/templates.ts): chính hiệu phó đó, HT, Admin.
 import "server-only";
 import type { NguoiDung } from "@/lib/auth/dal";
 import { nguoiChot, nguoiDuyet, phamViTheoDoi } from "@/lib/co-cau";
@@ -32,6 +33,7 @@ export async function layFileDuocXem(u: NguoiDung, fileId: string) {
         },
       },
       vanBan: { select: { viTriNhan: true } },
+      phuLucV: { select: { userId: true } },
     },
   });
   if (!file) throw new LoiNghiepVu("Không tìm thấy file.", 404);
@@ -47,6 +49,8 @@ export async function layFileDuocXem(u: NguoiDung, fileId: string) {
     if (kt.trangThai === "DA_CHOT" && phamViTheoDoi(u, cc).nguoi.some((x) => x.id === kt.userId)) return file;
   } else if (file.vanBan) {
     if (u.role === "HT" || file.vanBan.viTriNhan.includes(u.role)) return file;
+  } else if (file.phuLucV) {
+    if (u.role === "HT" || file.phuLucV.userId === u.id) return file;
   }
   throw new LoiNghiepVu("Bạn không có quyền xem file này.", 403);
 }

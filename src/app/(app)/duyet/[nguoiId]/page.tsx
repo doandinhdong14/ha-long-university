@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { TrangTieuDe } from "@/components/chung/trang-tieu-de";
 import { HaiBieuDoKpi } from "@/components/kpi/bieu-do-kpi";
+import { PhuLucVDaGui } from "@/components/kpi/phu-luc-v";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChonKy } from "@/components/chung/chon-ky";
 import { yeuCauVaiTro } from "@/lib/auth/dal";
@@ -15,6 +16,8 @@ import { layCoCau } from "@/lib/services/co-cau";
 import { layNguoiDuocDuyet } from "@/lib/services/duyet";
 import { taiKetQua } from "@/lib/services/ket-qua";
 import { dsChonKy, layKyTheoUrl } from "@/lib/services/ky";
+import { layPhuLucV } from "@/lib/services/phu-luc-v";
+import { PHU_LUC_V } from "@/lib/templates";
 import { cn } from "@/lib/utils";
 import { TabDangKy } from "./tab-dang-ky";
 import { TabTask } from "./tab-task";
@@ -37,6 +40,9 @@ export default async function TrangDuyetMotNguoi(props: PageProps<"/duyet/[nguoi
   const cc = await layCoCau();
   // v1.6 (mục 5): người duyệt mở chi tiết một người thấy đủ 2 biểu đồ (cấp trên, tự đánh giá).
   const kq = ky ? (await taiKetQua(ky.id, [nguoi])).get(nguoi.id) : undefined;
+  // Hiệu trưởng xem Phụ lục V hiệu phó đã gửi (chỉ nhận và xem).
+  const coPhuLucV = !!ky && nguoi.role === PHU_LUC_V.viTri;
+  const phuLucV = coPhuLucV ? await layPhuLucV(ky.id, nguoi.id) : null;
 
   return (
     <div className="space-y-6">
@@ -66,6 +72,16 @@ export default async function TrangDuyetMotNguoi(props: PageProps<"/duyet/[nguoi
               </CardHeader>
               <CardContent>
                 <HaiBieuDoKpi kq={kq} />
+              </CardContent>
+            </Card>
+          )}
+          {coPhuLucV && (
+            <Card data-testid="khoi-phu-luc-v">
+              <CardHeader>
+                <CardTitle className="text-base">{PHU_LUC_V.ten}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PhuLucVDaGui pl={phuLucV} xemNgay />
               </CardContent>
             </Card>
           )}

@@ -14,6 +14,9 @@ import { dongTach, hienPhanTram } from "@/lib/ket-qua";
 import { tieuDeKetQua } from "@/components/kpi/khoi-ket-qua";
 import { tongQuanDuyet } from "@/lib/services/duyet";
 import { taiKetQua } from "@/lib/services/ket-qua";
+import { dsPhuLucV } from "@/lib/services/phu-luc-v";
+import { PHU_LUC_V } from "@/lib/templates";
+import { hienNgayCuaThoiDiem } from "@/lib/time";
 import { dsChonKy, layKyTheoUrl } from "@/lib/services/ky";
 import { cn } from "@/lib/utils";
 import { HangCho } from "./hang-cho";
@@ -43,6 +46,8 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
 
   const dong = await tongQuanDuyet(m, ky.id);
   const ketQua = await taiKetQua(ky.id, dong.map((d) => d.nguoi));
+  // Hiệu trưởng nhận Phụ lục V của hiệu phó: thêm cột "Phụ lục V" (chỉ nhận và xem, không duyệt).
+  const phuLucV = viTri === PHU_LUC_V.viTri ? await dsPhuLucV(ky.id, dong.map((d) => d.nguoi.id)) : null;
   const tong = (f: (d: (typeof dong)[number]) => number) => dong.reduce((s, d) => s + f(d), 0);
   const oDem = [
     { nhan: "Danh sách đăng ký chờ duyệt", so: dong.filter((d) => d.dangKy?.trangThai === "CHO_DUYET").length, id: "dang-ky" },
@@ -106,6 +111,7 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
                   {!gop && <TableHead className="text-right">Chờ chốt</TableHead>}
                   {!gop && <TableHead className="text-right">Bị trả về</TableHead>}
                   {ky.daChot && <TableHead>Kết quả</TableHead>}
+                  {phuLucV && <TableHead>{PHU_LUC_V.ten}</TableHead>}
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -156,6 +162,15 @@ export default async function TrangDuyet(props: PageProps<"/duyet">) {
                       {ky.daChot && (
                         <TableCell data-cot="ket-qua" className="font-medium">
                           {d.ketQuaKy ? tieuDeKetQua(d.ketQuaKy) : "—"}
+                        </TableCell>
+                      )}
+                      {phuLucV && (
+                        <TableCell className="text-sm" data-cot="phu-luc-v">
+                          {phuLucV.has(d.nguoi.id) ? (
+                            `Đã gửi ${hienNgayCuaThoiDiem(phuLucV.get(d.nguoi.id)!)}`
+                          ) : (
+                            <span className="text-muted-foreground">Chưa gửi</span>
+                          )}
                         </TableCell>
                       )}
                       <TableCell>

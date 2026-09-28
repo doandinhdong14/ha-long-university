@@ -16,6 +16,7 @@ import { NHAN_LOAI_TASK } from "@/lib/nhan";
 import { chucDanh } from "@/lib/roles";
 import { lyDoKhongThaoTacTask } from "@/lib/rules";
 import { layLichSuNop } from "@/lib/services/lich-su";
+import { PHU_LUC_IV } from "@/lib/templates";
 import { deadline, hienNgayGio } from "@/lib/time";
 import { FormNopMinhChung } from "./form-nop";
 
@@ -36,7 +37,7 @@ export default async function TrangTaskCuaToi(props: PageProps<"/trong-ky/task/[
   const hienTai = duocLam.includes("SUA_BAI_NOP") ? lichSu[0] : undefined;
   const chucDanhDuyet = chucDanh(CHUOI[u.role].duyet);
   // v1.6 (mục 2.6): task cải tiến dùng đúng giao diện task thường, thêm gợi ý dưới ô tải file.
-  const goiY = kt.task.loai === "CAI_TIEN" ? "Nộp Phụ lục IV đã điền và file sản phẩm." : undefined;
+  const goiY = kt.task.loai === "CAI_TIEN" ? `Nộp ${PHU_LUC_IV.ten} đã điền và file sản phẩm.` : undefined;
 
   return (
     <div className="space-y-6">

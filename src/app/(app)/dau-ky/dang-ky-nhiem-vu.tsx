@@ -14,7 +14,7 @@ import { BadgeTrangThai } from "@/components/chung/badge-trang-thai";
 import { DemNguoc } from "@/components/chung/dem-nguoc";
 import { NutXacNhan } from "@/components/chung/nut-xac-nhan";
 import { useHanhDong } from "@/components/chung/use-hanh-dong";
-import { DUONG_DAN_PHU_LUC_IV } from "@/lib/cai-tien";
+import { PHU_LUC_IV } from "@/lib/templates";
 import { NHAN_DANG_KY } from "@/lib/nhan";
 import { cn } from "@/lib/utils";
 import { tinhXepLoai, type Bac } from "@/lib/xep-loai";
@@ -166,13 +166,13 @@ export function DangKyNhiemVu(props: {
             <div className="flex items-center gap-2 text-sm">
               <FileText className="size-5 text-blue-600" />
               <div>
-                <div className="font-medium">Phụ lục IV</div>
-                {!props.coPhuLucIV && <div className="text-xs text-muted-foreground">Mẫu Phụ lục IV đang được cập nhật</div>}
+                <div className="font-medium" data-testid="tieu-de-phu-luc">{PHU_LUC_IV.tieuDe}</div>
+                {!props.coPhuLucIV && <div className="text-xs text-muted-foreground">Mẫu {PHU_LUC_IV.ten} đang được cập nhật</div>}
               </div>
             </div>
             {props.coPhuLucIV ? (
               <Button asChild variant="outline" size="sm">
-                <a href={DUONG_DAN_PHU_LUC_IV} download>
+                <a href={PHU_LUC_IV.url} download={PHU_LUC_IV.tenTai}>
                   <Download className="size-4" /> Tải về
                 </a>
               </Button>

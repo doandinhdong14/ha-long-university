@@ -8,11 +8,12 @@ import { yeuCauNguoiLamKpi } from "@/lib/auth/dal";
 import { lyDoKhongGuiDangKy } from "@/lib/co-cau";
 import { db } from "@/lib/db";
 import { CHUOI } from "@/lib/kpi/chuoi";
-import { coPhuLucIV } from "@/lib/phu-luc";
+import { coFileMau } from "@/lib/phu-luc";
 import { chucDanh } from "@/lib/roles";
 import { lyDoKhongSuaDangKy } from "@/lib/rules";
 import { layCoCau } from "@/lib/services/co-cau";
 import { dsChonKy, layKyTheoUrl } from "@/lib/services/ky";
+import { PHU_LUC_IV } from "@/lib/templates";
 import { deadline, hanDangKy, hienNgayGio } from "@/lib/time";
 import { DangKyNhiemVu } from "./dang-ky-nhiem-vu";
 
@@ -87,7 +88,7 @@ export default async function TrangDauKy(props: PageProps<"/dau-ky">) {
         nhiemVus={nhiemVus.map((nv) => ({ id: nv.id, ten: nv.ten, moTa: nv.moTa, diem: nv.diem, tasks: nv.tasks }))}
         bacs={bacs.map((b) => ({ ten: b.ten, diemToiThieu: b.diemToiThieu }))}
         caiTien={caiTien}
-        coPhuLucIV={coPhuLucIV()}
+        coPhuLucIV={coFileMau(PHU_LUC_IV)}
         dangKy={
           dk
             ? {

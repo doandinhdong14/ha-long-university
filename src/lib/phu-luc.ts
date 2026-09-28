@@ -1,12 +1,11 @@
-// File mẫu Phụ lục IV (spec-v1.6 mục 2.2): file tĩnh, đường dẫn cố định public/templates/phu-luc-iv.docx, dùng
-// chung cho 4 vị trí và mọi kỳ. Chủ dự án tự chép file thật vào; chưa có thì giao diện báo "đang được cập nhật".
+// Kiểm tra file mẫu phụ lục (src/lib/templates.ts) đã có trên máy chủ chưa (spec-v1.6 mục 2.2): chưa có thì giao
+// diện báo "đang được cập nhật" và khóa nút Tải về.
 import "server-only";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import type { MauPhuLuc } from "@/lib/templates";
 
-export const FILE_PHU_LUC_IV = path.join(process.cwd(), "public", "templates", "phu-luc-iv.docx");
-
-/** Máy chủ đã có file mẫu Phụ lục IV chưa (kiểm tra mỗi lần hiển thị). */
-export function coPhuLucIV(): boolean {
-  return existsSync(FILE_PHU_LUC_IV);
+/** Máy chủ đã có file mẫu chưa (kiểm tra mỗi lần hiển thị). */
+export function coFileMau(mau: MauPhuLuc): boolean {
+  return existsSync(path.join(process.cwd(), "public", mau.tepPublic));
 }

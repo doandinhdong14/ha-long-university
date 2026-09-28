@@ -4,6 +4,7 @@
 import type { Prisma } from "../generated/prisma/client";
 import type { LoaiTask } from "../generated/prisma/enums";
 import { DOI_TUONGS } from "./roles";
+import { PHU_LUC_IV } from "./templates";
 
 type Tx = Prisma.TransactionClient;
 
@@ -13,9 +14,6 @@ type Tx = Prisma.TransactionClient;
  */
 export const LOAI_TASK_DANG_DUNG: LoaiTask[] = ["BAT_BUOC", "CAI_TIEN"];
 export const TASK_DANG_DUNG = { loai: { in: LOAI_TASK_DANG_DUNG } };
-
-/** Đường dẫn tải file mẫu Phụ lục IV (file thật: public/templates/phu-luc-iv.docx – mục 2.2). */
-export const DUONG_DAN_PHU_LUC_IV = "/templates/phu-luc-iv.docx";
 
 /** Phần trăm cộng thêm khi task cải tiến được chốt (mục 4.1). */
 export const THUONG_CAI_TIEN = 10;
@@ -27,7 +25,7 @@ export const NHIEM_VU_CAI_TIEN = {
   thuTu: 100000,
   task: {
     ten: "Sản phẩm cải tiến sáng tạo",
-    moTa: "Nộp Phụ lục IV đã điền và các file sản phẩm cải tiến.",
+    moTa: `Nộp ${PHU_LUC_IV.ten} đã điền và các file sản phẩm cải tiến.`,
   },
 } as const;
 

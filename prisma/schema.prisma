@@ -125,6 +125,7 @@ model User {
   vanBanDaGui  VanBan[]
   vanBanDaXem  VanBanDaXem[]
   thongBaos    ThongBao[]
+  phuLucVs     PhuLucV[]
 
   @@index([role])
 }
@@ -146,6 +147,7 @@ model Ky {
   kpiTasks    KpiTask[]
   yeuCaus     YeuCauThemTask[]
   ketQuas     KetQuaKy[]
+  phuLucVs    PhuLucV[]
 
   @@unique([namHoc, soKy])
 }
@@ -280,6 +282,23 @@ model FileDinhKem {
   vanBanId  String?
   vanBan    VanBan?  @relation(fields: [vanBanId], references: [id], onDelete: Cascade)
   taoLuc    DateTime @default(now())
+  phuLucV   PhuLucV?
+}
+
+/// Phụ lục V – phiếu tự đánh giá và xếp loại của hiệu phó, gửi hiệu trưởng ở Cuối kỳ (src/lib/templates.ts).
+/// Mỗi hiệu phó mỗi kỳ 1 bản; gửi lại thì thay file. Hiệu trưởng chỉ nhận và xem (không duyệt).
+/// Xóa file (vd nút Reset dữ liệu của admin) → xóa luôn bản ghi này.
+model PhuLucV {
+  id     String      @id @default(cuid())
+  kyId   String
+  ky     Ky          @relation(fields: [kyId], references: [id], onDelete: Cascade)
+  userId String
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileId String      @unique
+  file   FileDinhKem @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  guiLuc DateTime    @default(now())
+
+  @@unique([kyId, userId])
 }
 
 model YeuCauThemTask {
