@@ -1,4 +1,4 @@
-// Tải dữ liệu và gọi hàm tính kết quả dùng chung (mục 10.3) cho một hoặc nhiều người trong kỳ.
+// Tải dữ liệu và gọi hàm tính kết quả dùng chung (mục 10.3; spec-v1.6 mục 4) cho một hoặc nhiều người trong kỳ.
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
 import type { DoiTuong } from "@/generated/prisma/enums";
@@ -41,7 +41,6 @@ export async function taiKetQua(
     kq.set(
       u.id,
       tinhKetQuaThuan({
-        doiTuong: u.role,
         dangKy: dangKys.find((d) => d.userId === u.id) ?? null,
         tasks,
         bacs: bacs.filter((b) => b.doiTuong === u.role),

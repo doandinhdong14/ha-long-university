@@ -122,7 +122,7 @@ function TheNhiemVu({ nv, khoa }: { nv: NhiemVuHienThi; khoa: boolean }) {
             {nv.soDangKy > 0 && <Badge variant="secondary">{nv.soDangKy} người đã chọn</Badge>}
             {!coBatBuoc && (
               <Badge variant="destructive">
-                <AlertTriangle className="size-3" /> Chưa có task bắt buộc (tiến độ sẽ tính 100%)
+                <AlertTriangle className="size-3" /> Chưa có task bắt buộc (không có gì để làm cho nhiệm vụ này)
               </Badge>
             )}
           </div>

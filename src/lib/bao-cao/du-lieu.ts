@@ -104,16 +104,21 @@ export async function layDuLieuBaoCao(
 
   const ketQuaCua = (id: string): KetQuaTinh | null => {
     const k = ketQuaDaChot.find((x) => x.userId === id);
-    if (!k) return tamTinh.get(id) ?? null;
+    const tinh = tamTinh.get(id) ?? null;
+    if (!k || !tinh) return tinh;
+    // Kỳ đã chốt: số liệu lấy từ KetQuaKy; phần chi tiết (thống kê, task cải tiến) tính lại được vì task đã khóa.
     return {
+      ...tinh,
       ketQua: k.ketQua,
       xepLoai: k.xepLoai,
       phanTram: k.phanTram,
+      phanTramBatBuoc: k.phanTramBatBuoc,
+      tuDanhGia: k.tuDanhGia,
+      trangThaiCaiTien: k.trangThaiCaiTien,
       taskThieu: k.taskThieu as MucThieu[],
       taskVuot: k.taskVuot as MucVuot[],
       soTreo: k.soTreo,
       ghiChu: k.ghiChu,
-      thongKe: tamTinh.get(id)!.thongKe,
     };
   };
 

@@ -497,3 +497,26 @@ Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1
 - `tests/thong-bao.int.test.ts` › gửi đăng ký: gọi `guiDangKy({ kyId, caiTien })`.
 - `tests/chot.int.test.ts` › "% chỉ tăng khi chốt": % tính theo số task bắt buộc thực tế (đăng ký đủ 10 nhiệm vụ) thay vì 33,33.
 - `tests/bao-cao.int.test.ts` › "nội dung Excel": dòng của GV nay là A1 (100 điểm), % theo số task thực tế.
+
+## v1.6 – Bước 6: Cuối kỳ – task cải tiến + tinhKetQua mới (mục 2.6, 4) ✅
+
+**Đã làm**
+- `tinhKetQuaThuan` (`src/lib/ket-qua.ts`) viết lại theo mục 4.1 — vẫn là **một hàm** dùng chung (biểu đồ, chốt kỳ, báo cáo tạm tính, bảng Duyệt):
+  - chưa có đăng ký được duyệt → Không đạt, bậc thấp nhất, mọi % = 0, `KHONG_DANG_KY`, ghi chú "Chưa có danh sách nhiệm vụ được duyệt"
+  - `phanTramBatBuoc` = bắt buộc đã chốt / bắt buộc; `tuDanhGiaBatBuoc` = bắt buộc khác Chưa làm / bắt buộc; `phanTram` / `tuDanhGia` cộng +10 khi cải tiến **đã chốt** / **đã nộp** (tối đa 110); không có task bắt buộc → 0% + "Chưa có task bắt buộc"
+  - kết quả **so sánh bằng số lượng task**: thiếu task bắt buộc (hoặc không có) → Không đạt (cải tiến không bù được); đủ + cải tiến đã chốt → Vượt (`taskVuot` = task cải tiến); còn lại → Đạt
+  - `trangThaiCaiTien` KHONG_DANG_KY / CHUA_CHOT / DA_CHOT; `ghiChuCaiTien` = "Cải tiến sáng tạo đã đăng ký nhưng chưa được chốt – <lý do mục 6.2>"; task Mở rộng bỏ qua; lý do thiếu theo bảng 6.2
+  - `hienPhanTram` làm tròn số nguyên (lưu 2 chữ số thập phân); `dongTachPhanTram` / `dongTach` cho dòng "Bắt buộc X% · Cải tiến +10%" / "Cải tiến: chưa chốt" / "Cải tiến: chưa nộp".
+- Chốt kỳ lưu thêm `phanTramBatBuoc`, `tuDanhGia`, `trangThaiCaiTien` vào `KetQuaKy`; `phanTram` là tổng (đã cộng +10); ghi chú cải tiến chưa chốt nối vào `KetQuaKy.ghiChu`.
+- Khối Kết quả sau chốt kỳ (mục 4.2): "Không đạt – A1" + task bắt buộc còn thiếu kèm lý do; "Đạt – A1"; "Vượt chỉ tiêu – A1 (110%)" + "Cải tiến sáng tạo đã được chốt"; dòng Đánh giá của cấp trên kèm dòng tách, Tự đánh giá (tham khảo); ghi chú cải tiến chưa chốt.
+- Cuối kỳ / Trong kỳ (mục 2.6): người có đăng ký thấy khối **"Cải tiến sáng tạo"** bên dưới danh sách nhiệm vụ chứa task cải tiến (cùng giao diện, cùng vòng trạng thái nộp → duyệt → chốt; màn hình Duyệt/Chốt xử lý như task thường). Trang nộp minh chứng của task cải tiến có gợi ý "Nộp Phụ lục IV đã điền và file sản phẩm." dưới ô tải file. Không đăng ký → không có khối này.
+- Test: unit `src/lib/ket-qua.test.ts` viết lại (14 test: 6 dòng mục 12.1, case 12.2 "30% / 60%", "90% + cải tiến = 100% nhưng Không đạt", so sánh bằng số lượng, lý do 6.2, bỏ qua Mở rộng, dòng tách); tích hợp `tests/kich-ban.int.test.ts` = kịch bản **mục 12.1 chạy qua action thật** (xem dưới). **Hồi quy: unit 60, tích hợp 91 – tất cả pass.**
+
+**Tự chọn**
+- `taskVuot` chỉ ghi task cải tiến khi kết quả là Vượt (đúng giả mã 4.1); trường hợp cải tiến đã chốt nhưng thiếu bắt buộc thể hiện qua `trangThaiCaiTien = DA_CHOT`.
+- Ghi chú cải tiến chưa chốt lưu trong `KetQuaKy.ghiChu` (nối sau ghi chú kỳ, nếu có) – không thêm cột mới ngoài mục 9.1.
+- Nhãn cảnh báo admin "Chưa có task bắt buộc (tiến độ sẽ tính 100%)" đổi thành "(không có gì để làm cho nhiệm vụ này)" vì v1.6 không còn tính 100% cho trường hợp này (B13 cũ).
+
+**Test cũ sửa theo hành vi mới**
+- `src/lib/ket-qua.test.ts`: viết lại theo công thức mục 4 (bỏ các test "task mở rộng đã chốt → Vượt", "không có task bắt buộc → 100%", hiển thị "14,3%").
+- `tests/kich-ban-15.int.test.ts` → `tests/kich-ban.int.test.ts`: kịch bản mục 15 (v1.4, có task Mở rộng, xếp loại C/B) thay bằng kịch bản mục 12.1 (cả 6 người A1; Không đạt 50%/50%; Đạt 100%/100%; Vượt 110%/110% ×2; Đạt 100%/110% + ghi chú; Đạt 100%/100%), case treo (không còn "Đã duyệt nhưng chưa gửi lên"), sau chốt kỳ bị khóa (thử Duyệt thay cho Gửi lên), nhắc việc không còn "chưa gửi lên".

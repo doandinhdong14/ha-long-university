@@ -35,6 +35,8 @@ export default async function TrangTaskCuaToi(props: PageProps<"/trong-ky/task/[
   const duocLam = hanhDongDuocPhep("LAM", kt.trangThai, laGop(u.role));
   const hienTai = duocLam.includes("SUA_BAI_NOP") ? lichSu[0] : undefined;
   const chucDanhDuyet = chucDanh(CHUOI[u.role].duyet);
+  // v1.6 (mục 2.6): task cải tiến dùng đúng giao diện task thường, thêm gợi ý dưới ô tải file.
+  const goiY = kt.task.loai === "CAI_TIEN" ? "Nộp Phụ lục IV đã điền và file sản phẩm." : undefined;
 
   return (
     <div className="space-y-6">
@@ -79,9 +81,10 @@ export default async function TrangTaskCuaToi(props: PageProps<"/trong-ky/task/[
               ghiChu={hienTai.ghiChu ?? ""}
               link={hienTai.link ?? ""}
               files={hienTai.files}
+              goiY={goiY}
             />
           ) : duocLam.includes("NOP") ? (
-            <FormNopMinhChung cheDo="nop" kpiTaskId={kt.id} chucDanhDuyet={chucDanhDuyet} />
+            <FormNopMinhChung cheDo="nop" kpiTaskId={kt.id} chucDanhDuyet={chucDanhDuyet} goiY={goiY} />
           ) : (
             <p className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="da-khoa">
               <Lock className="size-4" /> {nhanChoNguoiLam(kt.trangThai, u.role)}. Không sửa được minh chứng.

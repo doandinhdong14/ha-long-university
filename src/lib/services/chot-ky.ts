@@ -33,12 +33,16 @@ export async function chotKy(kyId: string): Promise<{ soNguoi: number } | null> 
         const data = {
           doiTuong: u.role as DoiTuong,
           phanTram: kq.phanTram,
+          phanTramBatBuoc: kq.phanTramBatBuoc,
+          tuDanhGia: kq.tuDanhGia,
+          trangThaiCaiTien: kq.trangThaiCaiTien,
           ketQua: kq.ketQua,
           xepLoai: kq.xepLoai,
           taskThieu: kq.taskThieu,
           taskVuot: kq.taskVuot,
           soTreo: kq.soTreo,
-          ghiChu: kq.ghiChu,
+          // Ghi chú kỳ + (nếu có) "Cải tiến sáng tạo đã đăng ký nhưng chưa được chốt – <lý do>" (spec-v1.6 mục 4.2).
+          ghiChu: [kq.ghiChu, kq.ghiChuCaiTien].filter(Boolean).join(". ") || null,
           chotLuc,
         };
         await tx.ketQuaKy.upsert({

@@ -12,9 +12,13 @@ import type { FileHienThi } from "@/components/chung/danh-sach-file";
 import { ACCEPT_FILE, hienKichThuoc, lyDoFileKhongHopLe, lyDoLinkKhongHopLe, SO_FILE_TOI_DA } from "@/lib/files";
 import { cn } from "@/lib/utils";
 
-type Props =
+type Props = (
   | { cheDo: "nop"; kpiTaskId: string; chucDanhDuyet: string }
-  | { cheDo: "sua"; baiNopId: string; ghiChu: string; link: string; files: FileHienThi[] };
+  | { cheDo: "sua"; baiNopId: string; ghiChu: string; link: string; files: FileHienThi[] }
+) & {
+  /** Gợi ý dưới ô tải file (vd task cải tiến sáng tạo: "Nộp Phụ lục IV đã điền và file sản phẩm."). */
+  goiY?: string;
+};
 
 /** Form nộp minh chứng mới, hoặc sửa lần nộp hiện tại (Chờ duyệt). Gửi multipart tới route handler. */
 export function FormNopMinhChung(props: Props) {
@@ -126,6 +130,11 @@ export function FormNopMinhChung(props: Props) {
           accept={ACCEPT_FILE}
           onChange={(e) => themFile(e.target.files)}
         />
+        {props.goiY && (
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-300" data-testid="goi-y-nop">
+            {props.goiY}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">
           PDF, JPG, PNG, DOC/DOCX, XLS/XLSX · tối đa 20MB/file · tối đa {SO_FILE_TOI_DA} file.
         </p>

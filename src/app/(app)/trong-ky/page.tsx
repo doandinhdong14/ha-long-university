@@ -74,7 +74,7 @@ function NoiDungTrongKy(props: {
   daChot: boolean;
   xepLoai: string | null;
   kq: KetQuaTinh;
-  nhiemVus: { id: string; ten: string; diem: number }[];
+  nhiemVus: { id: string; ten: string; diem: number; laCaiTien: boolean }[];
   kpiTasks: KpiTaskCuaToi[];
 }) {
   const { kq } = props;
