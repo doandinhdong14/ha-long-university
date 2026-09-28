@@ -382,3 +382,28 @@ Lần deploy đầu, bước pre-deploy tạo bảng và seed dữ liệu demo: 
   - Giữ: tài khoản, mật khẩu, khoa/bộ môn, hiệu phó phụ trách, kỳ (kể cả trạng thái công bố), nhiệm vụ, task, bảng xếp loại.
   - Server action `resetDuLieuHeThong` (`admin/phan-viec/actions.ts`) kiểm tra vai trò ADMIN ở server; logic ở `src/lib/services/reset-du-lieu.ts`; test `tests/reset.int.test.ts`.
 - **Lý do:** làm lại demo ngay trên giao diện, không cần `npm run db:reset` từ máy; phân việc của admin không phải nhập lại.
+
+---
+
+# v1.6 (spec: `docs/spec-v1.6.md`, nhánh `feature/v1.6`)
+
+Bản sửa đổi trên nền v1.4. Làm theo thứ tự mục 11 của spec-v1.6; mỗi bước typecheck + build rồi commit `v1.6 – Bước X: …`.
+
+## v1.6 – Bước 1: Tái hiện lỗi "trưởng khoa thấy Chờ chốt trống" (mục 7.1) ✅
+
+**Cách tái hiện:** `e2e/v16-01-tai-hien-cho-chot.spec.ts`, chạy trên code v1.4 **chưa sửa** (build từ commit `ce0bbe8`), DB test seed lại, mọi thao tác qua giao diện thật. 7/7 test xác nhận đúng như mô tả dưới đây.
+
+**Kết luận: KHÔNG có lỗi thật. Nguyên nhân là task chưa được bấm "Gửi lên".**
+- GV nộp → TBM bấm **Duyệt** → task ở `DA_DUYET`. Theo v1.4 (bảng 5.3, mục 6.2) người chốt chỉ thấy `CHO_CHOT`/`DA_CHOT`/`TRA_VE`, nên trang "Chốt task giáo viên" của `tk.levankhoa` hiện ô đếm **0** và "Không có task nào" — kể cả khi chọn lọc "Tất cả". Đây chính là hiện tượng người dùng báo.
+- Cùng lúc đó mọi tín hiệu khác đều khiến người dùng tưởng task đã tới người chốt: GV thấy nhãn *"Trưởng bộ môn đã duyệt – chờ trưởng khoa chốt"* (nhãn này dùng chung cho `DA_DUYET` và `CHO_CHOT`), còn TBM chỉ thấy task ở ô "Đã duyệt, chưa gửi lên" và phải mở lại từng task để bấm thêm nút **"Gửi lên trưởng khoa"**. Bước thứ hai này dễ bị bỏ qua.
+- Ngay khi TBM bấm "Gửi lên trưởng khoa" (task → `CHO_CHOT`), TK thấy task ngay: ô đếm 1, đúng một dòng.
+- Hai chuỗi còn lại cho kết quả y hệt: TBM → TK duyệt → **HP** trống cho tới khi TK bấm "Gửi lên hiệu phó"; TK → HP duyệt → **HT** trống cho tới khi HP bấm "Gửi lên hiệu trưởng".
+
+**Các chỗ đã kiểm tra theo mục 7.1.2 (đều đúng, không sửa):**
+- `nguoiChot(GV)` (`src/lib/co-cau.ts`): bộ môn của GV → `BoMon.khoaId` → user role TK có cùng `khoaId`. Seed: `tk.levankhoa.khoaId` = Khoa CNTT, `Bộ môn Khoa học máy tính.khoaId` = Khoa CNTT (đã tra thẳng DB dev). Test tích hợp `co-cau` sẵn có cũng phủ.
+- Truy vấn trang Chốt (`src/app/(app)/chot/page.tsx`): người = `nguoiToiChot(m)` (lọc ngược bằng chính `nguoiChot`, nên luôn khớp), trạng thái mặc định `CHO_CHOT`, đúng kỳ đang chọn.
+- Kỳ mặc định: trang Chốt, Duyệt, Trong kỳ dùng chung `layKyTheoUrl` → `chonKyHienTai`, nên người làm KPI và người chốt luôn mở cùng một kỳ mặc định. Test cuối của file tái hiện dựng thêm một kỳ thứ hai đã công bố, trùng ngày: GV và TK cùng mặc định sang kỳ mới, task (ở kỳ cũ) không hiện theo menu nhưng hiện đúng khi mở theo link trong thông báo (link luôn kèm `kyId`). Đây là hành vi đã chọn ở B7 (nhiều kỳ mở cùng lúc thì chọn kỳ bằng dropdown), không phải lỗi truy vấn; ghi lại để biết khi admin công bố hai kỳ chồng ngày.
+
+**Hướng xử lý:** bỏ bước Gửi lên (mục 7.2, bước 3). Người duyệt bấm Duyệt là task sang `CHO_CHOT` ngay, nên hiện tượng này hết. Không có lỗi thật cần sửa thêm.
+
+**Chưa kiểm tra:** dữ liệu trên Railway (production) — tái hiện làm bằng seed như spec yêu cầu.
